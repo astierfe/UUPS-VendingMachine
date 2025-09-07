@@ -1,0 +1,132 @@
+@startuml Package Diagram A4
+!theme mars
+title Vending Machine V1 - Package Structure
+
+' A4 Portrait layout optimizations
+!define RECTANGLE_WIDTH 200
+skinparam dpi 150
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam ranksep 50
+skinparam nodesep 25
+skinparam minClassWidth 80
+skinparam maxMessageSize 100
+
+' Use left-to-right for better A4 fit
+left to right direction
+
+together {
+  rectangle "SMART CONTRACTS" #LightBlue {
+    package contracts {
+      class VendingMachineV1 #Orange
+      class ProductLibrary #Orange
+    }
+    package "OpenZeppelin\nContracts" {
+      abstract Initializable #LightGray
+      abstract OwnableUpgradeable #LightGray
+      abstract UUPSUpgradeable #LightGray
+    }
+  }
+
+  rectangle "FRONTEND\nAPPLICATION" #LightGreen {
+    package components {
+      class App #Green
+      class Header #Green
+      class Catalog #Green
+      class ProductCard #Green
+      class PurchaseHistory #Green
+      class Footer #Green
+    }
+    package hooks {
+      class useContract #DarkGreen
+    }
+    package utils {
+      class ContractUtils #DarkGreen
+    }
+    package public {
+      class ConfigFile <<artifact>> #Yellow
+    }
+  }
+}
+
+together {
+  rectangle "DEVELOPMENT\nTOOLS" #Pink {
+    package scripts {
+      class DeployScript <<script>> #Red
+      class PopulateScript <<script>> #Red
+      class FullDeployScript <<script>> #Red
+    }
+    package data {
+      class ProductsCSV <<data>> #Orange
+    }
+    package test {
+      class VendingMachineTest <<test>> #Purple
+    }
+  }
+
+  rectangle "CONFIGURATION &\nARTIFACTS" #LightYellow {
+    package configuration {
+      class HardhatConfig <<config>> #Gold
+      class PackageJSON <<config>> #Gold
+      class EnvironmentFile <<config>> #Gold
+    }
+    package "build artifacts" {
+      class VendingMachineArtifact <<artifact>> #Tan
+      class ProductLibraryArtifact <<artifact>> #Tan
+      class DeployedAddresses <<artifact>> #Tan
+      class SolidityCache <<cache>> #LightGray
+    }
+  }
+}
+
+rectangle "EXTERNAL\nDEPENDENCIES" #Lavender {
+  package "OpenZeppelin\nLibraries" {
+    class ProxyUtils #Violet
+    class AccessControl #Violet
+  }
+  package "Hardhat\nFramework" {
+    class HardhatRuntime #Blue
+    class HardhatNetwork #Blue
+  }
+  package "Ethers.js\nLibrary" {
+    class EthersContract #Navy
+    class EthersProvider #Navy
+    class EthersSigner #Navy
+  }
+  package "Chakra UI\nFramework" {
+    class ChakraProvider #Teal
+    class UIComponents #Teal
+  }
+}
+
+' Key relationships - simplified for clarity
+VendingMachineV1 --> ProductLibrary : uses
+VendingMachineV1 --> Initializable : extends
+VendingMachineV1 --> OwnableUpgradeable : extends
+VendingMachineV1 --> UUPSUpgradeable : extends
+
+App --> useContract : uses
+useContract --> ContractUtils : uses
+ContractUtils --> ConfigFile : reads
+
+DeployScript --> PopulateScript : calls
+PopulateScript --> ProductsCSV : reads
+DeployScript --> DeployedAddresses : generates
+
+HardhatConfig --> EnvironmentFile : imports
+
+' Layer dependencies
+"FRONTEND\nAPPLICATION" ..> "SMART CONTRACTS" : interacts
+"DEVELOPMENT\nTOOLS" ..> "SMART CONTRACTS" : deploys
+"CONFIGURATION &\nARTIFACTS" ..> "EXTERNAL\nDEPENDENCIES" : uses
+
+note as N1
+<b>Architecture Layers:</b>
+• Smart Contracts: Blockchain logic
+• Frontend: User interface (React)
+• Development: Build & deploy tools
+• Config/Artifacts: Build outputs
+• External: Third-party libraries
+end note
+
+@enduml

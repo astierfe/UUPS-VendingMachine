@@ -1,0 +1,89 @@
+@startuml Purchase Sequence Diagram
+!theme mars
+title Vending Machine V1 - Purchase Sequence Diagram
+
+actor User
+participant "React App" as App
+participant "useContract Hook" as Hook
+participant "MetaMask" as MetaMask
+participant "ethers.js" as Ethers
+participant "VendingMachine Proxy" as Proxy
+participant "VendingMachine V1" as Implementation
+participant "ProductLibrary" as Library
+
+== Product Purchase Flow ==
+
+User -> App : Click "Acheter" on ProductCard
+activate App
+
+App -> Hook : buyProduct(productId, price)
+activate Hook
+
+Hook -> Hook : Check if wallet connected
+alt Wallet not connected
+    Hook -> App : Return error "Connect wallet"
+    App -> User : Display error message
+else Wallet connected
+    Hook -> Ethers : contract.buyProduct(productId, {value: price})
+    activate Ethers
+    
+    Ethers -> MetaMask : Request transaction signature
+    activate MetaMask
+    
+    MetaMask -> User : Show transaction popup
+    User -> MetaMask : Confirm transaction
+    
+    MetaMask -> Ethers : Signed transaction
+    deactivate MetaMask
+    
+    Ethers -> Proxy : Call buyProduct(productId)
+    activate Proxy
+    
+    Proxy -> Implementation : Delegate call buyProduct(productId)
+    activate Implementation
+    
+    Implementation -> Implementation : Check product exists\nrequire(product.id != 0)
+    
+    Implementation -> Implementation : Check stock\nrequire(product.stock > 0)
+    
+    Implementation -> Implementation : Check payment\nrequire(msg.value >= product.price)
+    
+    Implementation -> Library : calculateRefund(msg.value, product.price)
+    activate Library
+    Library -> Implementation : Return refund amount
+    deactivate Library
+    
+    Implementation -> Implementation : Decrement stock\nproduct.stock -= 1
+    
+    alt Refund needed
+        Implementation -> User : transfer(refund)
+        Implementation -> Implementation : emit RefundSent(buyer, refund)
+    end
+    
+    Implementation -> Implementation : emit ProductPurchased(id, buyer, price)
+    
+    Implementation -> Proxy : Return success
+    deactivate Implementation
+    
+    Proxy -> Ethers : Transaction receipt
+    deactivate Proxy
+    
+    Ethers -> Hook : Transaction confirmed
+    deactivate Ethers
+    
+    Hook -> Hook : Add to purchase history
+    Hook -> Hook : Reload products (update stock)
+    Hook -> App : Return success
+    deactivate Hook
+    
+    App -> App : Show success toast
+    App -> User : Display updated catalog
+end
+
+deactivate App
+
+note right of Implementation : All state changes happen\nin the implementation contract\nvia delegate call
+
+note left of Library : Library functions are pure\nand gas-optimized
+
+@enduml

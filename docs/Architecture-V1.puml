@@ -1,0 +1,46 @@
+@startuml VendingMachine Architecture
+!theme mars
+title Vending Machine V1 - Architecture
+
+package "Frontend Layer" {
+  [React App] as ReactApp
+  [MetaMask] as MetaMask
+  [Chakra UI] as ChakraUI
+  ReactApp --> ChakraUI : uses
+  ReactApp --> MetaMask : connects
+}
+
+package "Web3 Layer" {
+  [ethers.js] as Ethers
+  ReactApp --> Ethers : uses
+  Ethers --> MetaMask : interacts
+}
+
+package "Blockchain Layer" {
+  node "Ethereum Network" {
+    [VendingMachine Proxy] as Proxy
+    [VendingMachine V1] as Implementation
+    [ProductLibrary] as Library
+    
+    Proxy --> Implementation : delegates to
+    Implementation --> Library : uses
+  }
+}
+
+package "Development Tools" {
+  [Hardhat Node] as HardhatNode
+  [Hardhat Scripts] as Scripts
+  [CSV Data] as CSV
+  
+  Scripts --> HardhatNode : deploys to
+  Scripts --> CSV : reads from
+}
+
+Ethers --> Proxy : sends transactions
+MetaMask --> "Ethereum Network" : signs transactions
+
+note right of Proxy : UUPS Pattern\nUpgradable without\naddress change
+
+note top of Library : Pure functions\nfor product operations
+
+@enduml

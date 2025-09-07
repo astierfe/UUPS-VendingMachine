@@ -1,0 +1,187 @@
+@startuml VendingMachineV2_ClassDiagram
+!theme mars
+
+title VendingMachine DAO V2 - Diagramme de Classes
+
+package "OpenZeppelin Base Contracts" {
+  abstract class Initializable {
+    +_disableInitializers()
+    +initializer()
+  }
+  
+  abstract class OwnableUpgradeable {
+    -address _owner
+    +owner(): address
+    +transferOwnership(address)
+    +onlyOwner()
+  }
+  
+  abstract class UUPSUpgradeable {
+    +_authorizeUpgrade(address)
+    +upgradeTo(address)
+  }
+  
+  abstract class ERC20 {
+    -mapping balances
+    -uint256 totalSupply
+    +transfer(address, uint256)
+    +balanceOf(address): uint256
+  }
+  
+  abstract class ERC20Votes {
+    -mapping delegates
+    -mapping checkpoints
+    +delegate(address)
+    +getVotes(address): uint256
+  }
+  
+  abstract class Governor {
+    +propose(proposal): uint256
+    +castVote(uint256, uint8)
+    +execute(execution)
+    +state(uint256): ProposalState
+  }
+  
+  abstract class TimelockController {
+    -uint256 minDelay
+    +schedule(task)
+    +execute(task)
+    +grantRole(bytes32, address)
+  }
+}
+
+package "Business Logic" {
+  class ProductLibrary {
+    +calculateTotal(uint256, uint256): uint256
+    +validateStock(Product, uint256): bool
+    +validateProductId(uint256): bool
+    +calculateRefund(uint256, uint256): uint256
+  }
+
+  class Product {
+    +uint256 id
+    +string name
+    +uint256 price
+    +uint256 stock
+  }
+}
+
+package "V1 Implementation" {
+  class VendingMachineV1 {
+    +mapping products
+    +uint256[] productIds
+    
+    +initialize()
+    +addProduct(uint256, string, uint256, uint256)
+    +buyProduct(uint256)
+    +getProducts(): Product[]
+    +withdraw()
+    +_authorizeUpgrade(address)
+    
+    +ProductAdded(uint256, string, uint256, uint256)
+    +ProductPurchased(uint256, address, uint256)
+    +RefundSent(address, uint256)
+  }
+}
+
+package "V2 Governance Implementation" {
+  class VendingMachineV2 {
+    +mapping products
+    +uint256[] productIds
+    
+    +GovernanceToken governanceToken
+    +address governanceContract
+    +uint256 totalRevenue
+    +mapping customerTokens
+    
+    +initialize()
+    +initializeV2(address)
+    +setGovernanceContract(address)
+    +addProductGovernance()
+    +buyProduct(uint256)
+    +updateProductPrice(uint256, uint256)
+    +addStock(uint256, uint256)
+    +distributeRevenue(address[], uint256[])
+    +withdraw()
+    
+    +GovernanceTokensEarned(address, uint256)
+    +GovernanceContractSet(address, address)
+    +RevenueUpdated(uint256)
+  }
+  
+  class GovernanceToken {
+    +uint256 TOKENS_PER_ETH = 1000
+    +constructor()
+    +mintForPurchase(address, uint256)
+    +mint(address, uint256)
+    +transfer(address, uint256)
+    +balanceOf(address): uint256
+    +delegate(address)
+    +getVotes(address): uint256
+  }
+  
+  class VendingGovernor {
+    +constructor(IVotes, TimelockController)
+    +votingDelay(): 1 block
+    +votingPeriod(): 45818 blocks
+    +proposalThreshold(): 100e18
+    +quorum(): 4%
+    +propose(proposal): uint256
+    +castVote(uint256, uint8)
+    +queue(task)
+    +execute(task)
+    +state(uint256): ProposalState
+  }
+}
+
+' Inheritance relationships
+VendingMachineV1 --|> Initializable
+VendingMachineV1 --|> OwnableUpgradeable
+VendingMachineV1 --|> UUPSUpgradeable
+
+VendingMachineV2 --|> VendingMachineV1
+
+GovernanceToken --|> ERC20
+GovernanceToken --|> ERC20Votes
+GovernanceToken --|> OwnableUpgradeable
+
+VendingGovernor --|> Governor
+
+' Usage relationships
+VendingMachineV1 ..> ProductLibrary : uses
+VendingMachineV2 ..> ProductLibrary : uses
+VendingMachineV2 --> GovernanceToken : controls
+VendingGovernor --> GovernanceToken : reads votes from
+VendingGovernor --> TimelockController : executes via
+TimelockController --> VendingMachineV2 : can call
+
+note right of VendingMachineV2
+  **Storage Layout V2:**
+  Slots 0-N: V1 data (preserved)
+  Slots N+1: governanceToken
+  Slots N+2: governanceContract  
+  Slots N+3: totalRevenue
+  Slots N+4: customerTokens mapping
+  **UUPS Upgrade:**
+  V1 → V2 preserves all storage
+  New initializeV2() for governance setup
+end note
+
+note right of GovernanceToken
+  **Token Economics:**
+  • Minted on purchases only
+  • 1 ETH spent = 1000 VEND tokens
+  • Voting power = token balance
+  • Delegatable to other addresses
+end note
+
+note right of VendingGovernor
+  **Governance Parameters:**
+  • Threshold: 100 VEND to propose
+  • Delay: 1 block before voting starts
+  • Period: ~1 week to vote
+  • Quorum: 4% of total supply
+  • Timelock: 2 days before execution
+end note
+
+@enduml

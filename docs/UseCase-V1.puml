@@ -1,0 +1,93 @@
+@startuml Use Case Diagram
+!theme mars
+title Vending Machine V1 - Use Case Diagram
+
+left to right direction
+
+actor "Customer" as Customer
+actor "Administrator" as Admin
+actor "Developer" as Dev
+
+rectangle "Vending Machine V1 System" {
+  
+  package "Customer Functions" {
+    usecase "Connect Wallet" as UC1
+    usecase "View Product Catalog" as UC2
+    usecase "Purchase Product" as UC3
+    usecase "View Purchase History" as UC4
+    usecase "Receive Refund" as UC5
+  }
+  
+  package "Administration Functions" {
+    usecase "Deploy Contract" as UC6
+    usecase "Add Product" as UC7
+    usecase "Update Product" as UC8
+    usecase "Withdraw Funds" as UC9
+    usecase "Upgrade Contract" as UC10
+  }
+  
+  package "System Functions" {
+    usecase "Validate Transaction" as UC11
+    usecase "Update Stock" as UC12
+    usecase "Calculate Refund" as UC13
+    usecase "Emit Events" as UC14
+    usecase "Manage Proxy" as UC15
+  }
+  
+  package "Development Functions" {
+    usecase "Local Deployment" as UC16
+    usecase "Testnet Deployment" as UC17
+    usecase "Populate Test Data" as UC18
+    usecase "Run Tests" as UC19
+    usecase "Verify Contracts" as UC20
+  }
+}
+
+' Customer relationships
+Customer --> UC1
+Customer --> UC2
+Customer --> UC3
+Customer --> UC4
+
+' Administrator relationships
+Admin --> UC6
+Admin --> UC7
+Admin --> UC8
+Admin --> UC9
+Admin --> UC10
+
+' Developer relationships
+Dev --> UC16
+Dev --> UC17
+Dev --> UC18
+Dev --> UC19
+Dev --> UC20
+
+' System internal relationships
+UC3 ..> UC11 : <<include>>
+UC3 ..> UC12 : <<include>>
+UC3 ..> UC13 : <<include>>
+UC3 ..> UC14 : <<include>>
+
+UC5 ..> UC3 : <<extend>>
+UC8 ..> UC7 : <<extend>>
+
+UC10 ..> UC15 : <<include>>
+UC6 ..> UC15 : <<include>>
+
+' Dependencies
+UC3 --> UC1 : <<requires>>
+UC4 --> UC1 : <<requires>>
+UC7 --> UC6 : <<requires>>
+UC8 --> UC7 : <<requires>>
+UC9 --> UC6 : <<requires>>
+
+UC17 --> UC16 : <<extends>>
+UC18 --> UC17 : <<requires>>
+
+note right of UC3 : Automatically handles\nrefunds for overpayments
+note right of UC10 : UUPS pattern allows\nseamless upgrades
+note bottom of UC15 : Proxy manages contract\nupgrades transparently
+note left of UC18 : CSV-based product\ndata import
+
+@enduml

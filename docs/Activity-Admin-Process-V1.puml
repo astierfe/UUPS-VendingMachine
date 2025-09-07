@@ -1,0 +1,71 @@
+@startuml Admin Activity Diagram
+!theme mars
+title Vending Machine V1 - Admin Activity Diagram
+
+|Administrator|
+start
+:Deploy contracts;
+:Prepare product data (CSV);
+
+|Deployment System|
+:Read CSV file;
+:Parse product data;
+
+|Smart Contract|
+fork
+  :Validate admin permissions;
+  if (msg.sender == owner?) then (yes)
+    :Continue;
+  else (no)
+    :Revert transaction;
+    stop
+  endif
+fork again
+  :Validate product ID;
+  if (productId > 0?) then (yes)
+    :Continue;
+  else (no)
+    :Revert "Invalid product ID";
+    stop
+  endif
+fork again
+  :Validate price;
+  if (price > 0?) then (yes)
+    :Continue;
+  else (no)
+    :Revert "Invalid price";
+    stop
+  endif
+end fork
+
+:Check if product exists;
+if (products[id].id == 0?) then (New product)
+  :Add to productIds array;
+else (Existing product)
+  :Update existing product;
+endif
+
+:Store product in mapping;
+:Emit ProductAdded event;
+
+|Administrator|
+:Verify deployment;
+:Test product purchase;
+
+if (All products added successfully?) then (yes)
+  :Deployment complete;
+  |Frontend|
+  :Copy contract addresses;
+  :Update configuration;
+  :Launch application;
+  stop
+else (no)
+  :Debug issues;
+  :Retry failed products;
+  stop
+endif
+
+note right: Admin functions require\nownership verification
+note left: All changes are logged\nvia events
+
+@enduml

@@ -1,0 +1,121 @@
+@startuml Component Diagram
+!theme mars
+title Vending Machine V1 - Component Diagram
+
+package "Smart Contract Layer" {
+  component [ProductLibrary] as ProdLib
+  component [VendingMachineV1] as VM1
+  component [Initializable] as Init
+  component [OwnableUpgradeable] as Own
+  component [UUPSUpgradeable] as UUPS
+  
+  VM1 --> ProdLib : uses
+  VM1 --> Init : inherits
+  VM1 --> Own : inherits  
+  VM1 --> UUPS : inherits
+  
+  interface "IVendingMachine" as IVM
+  VM1 .up.> IVM : implements
+  
+  note right of ProdLib : Library with pure functions\nfor product operations
+}
+
+package "Frontend Application" {
+  component [App] as MainApp
+  component [Header] as HeaderComp
+  component [Catalog] as CatalogComp
+  component [ProductCard] as ProductComp
+  component [PurchaseHistory] as HistoryComp
+  component [Footer] as FooterComp
+  
+  MainApp --> HeaderComp : renders
+  MainApp --> CatalogComp : renders
+  MainApp --> HistoryComp : renders
+  MainApp --> FooterComp : renders
+  CatalogComp --> ProductComp : renders multiple
+  
+  interface "IReactComponent" as IRC
+  HeaderComp .up.> IRC
+  CatalogComp .up.> IRC
+  ProductComp .up.> IRC
+  HistoryComp .up.> IRC
+  FooterComp .up.> IRC
+}
+
+package "Hooks & State Management" {
+  component [useContract] as UseContract
+  component [useState] as State
+  component [useEffect] as Effect
+  component [useCallback] as Callback
+  
+  UseContract --> State : uses
+  UseContract --> Effect : uses
+  UseContract --> Callback : uses
+  
+  MainApp --> UseContract : uses
+}
+
+package "Web3 Integration" {
+  component [ethers.js] as Ethers
+  component [Contract Utils] as ContractUtils
+  component [MetaMask Provider] as MetaMask
+  
+  UseContract --> Ethers : uses
+  UseContract --> ContractUtils : uses
+  Ethers --> MetaMask : connects to
+  
+  interface "IWeb3Provider" as IW3P
+  MetaMask .up.> IW3P
+}
+
+package "UI Framework" {
+  component [Chakra UI] as Chakra
+  component [Theme Provider] as Theme
+  component [Color Mode] as ColorMode
+  
+  MainApp --> Chakra : uses
+  Chakra --> Theme : uses
+  Chakra --> ColorMode : uses
+}
+
+package "Build Tools" {
+  component [Vite] as ViteBuild
+  component [React] as ReactLib
+  component [TypeScript/JavaScript] as TSLib
+  
+  ViteBuild --> ReactLib : bundles
+  ViteBuild --> TSLib : compiles
+}
+
+package "Development Tools" {
+  component [Hardhat] as HH
+  component [Solidity Compiler] as SolC
+  component [OpenZeppelin Upgrades] as OZUp
+  component [CSV Parser] as CSV
+  
+  HH --> SolC : uses
+  HH --> OZUp : uses
+  HH --> CSV : uses for data import
+}
+
+' Cross-layer connections
+UseContract --> VM1 : interacts with via ethers
+ContractUtils --> VM1 : provides interface to
+ProductComp --> UseContract : triggers buyProduct
+
+' External dependencies
+cloud "External Services" {
+  component [Alchemy RPC] as Alchemy
+  component [Ethereum Network] as EthNet
+  component [IPFS] as IPFSNet
+}
+
+MetaMask --> Alchemy : connects via
+Alchemy --> EthNet : proxies to
+ViteBuild --> IPFSNet : can deploy to
+
+note top of VM1 : UUPS Proxy Pattern\nallows upgrades without\nchanging contract address
+
+note bottom of UseContract : Central state management\nfor blockchain interactions\nHandles wallet connection
+
+@enduml

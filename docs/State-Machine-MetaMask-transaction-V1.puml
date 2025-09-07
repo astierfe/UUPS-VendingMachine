@@ -1,0 +1,84 @@
+@startuml MetaMask Transaction State Machine
+!theme mars
+title Vending Machine V1 - MetaMask Transaction State Machine
+
+[*] --> Disconnected : Page loaded
+
+Disconnected --> Connecting : User clicks "Connect MetaMask"
+Connecting --> Connected : User approves connection
+Connecting --> Disconnected : User rejects connection
+
+Connected --> TransactionRequested : User clicks "Buy Product"
+TransactionRequested --> PendingApproval : MetaMask popup shown
+TransactionRequested --> Connected : Transaction creation failed
+
+PendingApproval --> PendingConfirmation : User approves transaction
+PendingApproval --> Connected : User rejects transaction
+
+PendingConfirmation --> Confirmed : Transaction mined successfully
+PendingConfirmation --> Failed : Transaction failed/reverted
+PendingConfirmation --> Connected : User cancels transaction
+
+Confirmed --> Connected : Success message shown
+Failed --> Connected : Error message shown
+
+Connected --> Disconnected : Network changed
+Connected --> Disconnected : Account changed
+Connected --> Disconnected : MetaMask locked
+
+state Disconnected {
+  Disconnected : No wallet access
+  Disconnected : "Connect MetaMask" button visible
+  Disconnected : Products not accessible
+}
+
+state Connecting {
+  Connecting : MetaMask popup requesting permission
+  Connecting : User must approve connection
+}
+
+state Connected {
+  Connected : Wallet connected
+  Connected : Account visible in header
+  Connected : Products accessible
+  Connected : Can initiate purchases
+}
+
+state TransactionRequested {
+  TransactionRequested : buyProduct() called
+  TransactionRequested : Transaction data prepared
+  TransactionRequested : Gas estimation in progress
+}
+
+state PendingApproval {
+  PendingApproval : MetaMask transaction popup
+  PendingApproval : User sees gas fee
+  PendingApproval : Can approve/reject/edit gas
+}
+
+state PendingConfirmation {
+  PendingConfirmation : Transaction submitted to network
+  PendingConfirmation : Waiting for mining
+  PendingConfirmation : Loading spinner shown
+}
+
+state Confirmed {
+  Confirmed : Transaction successful
+  Confirmed : Product purchased
+  Confirmed : Stock updated
+  Confirmed : Success toast shown
+}
+
+state Failed {
+  Failed : Transaction reverted
+  Failed : Common causes:
+  Failed : - Insufficient funds
+  Failed : - Out of stock
+  Failed : - Gas limit exceeded
+}
+
+note right of PendingConfirmation : Transaction hash available\nCan be viewed on Etherscan\nUser can cancel before mining
+
+note left of Failed : Error messages help debug:\n- "Insufficient payment"\n- "Out of stock"\n- "Product does not exist"
+
+@enduml

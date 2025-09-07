@@ -1,0 +1,114 @@
+@startuml Deployment Sequence Diagram
+!theme mars
+title Vending Machine V1 - Deployment Sequence Diagram
+
+actor Developer
+participant "Hardhat CLI" as Hardhat
+participant "deploy.js" as DeployScript
+participant "ethers.js" as Ethers
+participant "OpenZeppelin Upgrades" as OZUpgrades
+participant "Ethereum Network" as Network
+participant "products.csv" as CSV
+participant "populate-products.js" as PopulateScript
+
+== Contract Deployment Phase ==
+
+Developer -> Hardhat : npx hardhat run scripts/deploy.js --network localhost
+activate Hardhat
+
+Hardhat -> DeployScript : Execute deployment script
+activate DeployScript
+
+DeployScript -> Ethers : getContractFactory("ProductLibrary")
+Ethers -> DeployScript : ProductLibrary factory
+
+DeployScript -> Ethers : ProductLibrary.deploy()
+activate Ethers
+Ethers -> Network : Deploy ProductLibrary bytecode
+Network -> Ethers : Contract address (0x5FbDB...)
+Ethers -> DeployScript : ProductLibrary deployed
+deactivate Ethers
+
+DeployScript -> Ethers : getContractFactory("VendingMachineV1")
+Ethers -> DeployScript : VendingMachineV1 factory
+
+DeployScript -> OZUpgrades : deployProxy(VendingMachineV1, [], {initializer: 'initialize'})
+activate OZUpgrades
+
+OZUpgrades -> Network : Deploy implementation contract
+Network -> OZUpgrades : Implementation address
+
+OZUpgrades -> Network : Deploy proxy contract
+Network -> OZUpgrades : Proxy address (0x9fE46...)
+
+OZUpgrades -> Network : Call proxy.initialize()
+Network -> OZUpgrades : Initialization complete
+
+OZUpgrades -> DeployScript : Proxy contract instance
+deactivate OZUpgrades
+
+DeployScript -> DeployScript : Create addresses object\n{productLibrary, vendingMachineProxy, network}
+
+DeployScript -> DeployScript : writeFileSync('deployed-addresses.json')
+
+DeployScript -> Hardhat : Deployment complete
+deactivate DeployScript
+
+Hardhat -> Developer : ✅ Contracts deployed successfully
+deactivate Hardhat
+
+== Product Population Phase ==
+
+Developer -> Hardhat : npx hardhat run scripts/populate-products.js --network localhost
+activate Hardhat
+
+Hardhat -> PopulateScript : Execute population script
+activate PopulateScript
+
+PopulateScript -> PopulateScript : readFileSync('deployed-addresses.json')
+
+PopulateScript -> CSV : createReadStream('data/products.csv')
+activate CSV
+
+CSV -> PopulateScript : Stream product data
+loop For each product row
+    CSV -> PopulateScript : {id, name, price, stock}
+end
+CSV -> PopulateScript : End of file
+deactivate CSV
+
+PopulateScript -> Ethers : getContractFactory("VendingMachineV1")
+PopulateScript -> Ethers : attach(addresses.vendingMachineProxy)
+Ethers -> PopulateScript : Contract instance
+
+loop For each product
+    PopulateScript -> Ethers : contract.addProduct(id, name, price, stock)
+    activate Ethers
+    Ethers -> Network : Execute addProduct transaction
+    Network -> Ethers : Transaction receipt
+    Ethers -> PopulateScript : Product added successfully
+    deactivate Ethers
+end
+
+PopulateScript -> Hardhat : Population complete
+deactivate PopulateScript
+
+Hardhat -> Developer : ✅ Products populated successfully
+deactivate Hardhat
+
+== Verification Phase ==
+
+Developer -> Hardhat : npx hardhat console --network localhost
+Hardhat -> Developer : Interactive console
+
+Developer -> Ethers : contract = await ethers.getContractAt("VendingMachineV1", "0x9fE46...")
+Developer -> Ethers : await contract.getProductCount()
+Ethers -> Network : Call getProductCount()
+Network -> Ethers : Return product count
+Ethers -> Developer : Number of products
+
+note right of Network : All transactions are recorded\non the blockchain with\nevent logs for traceability
+
+note left of OZUpgrades : UUPS pattern creates:\n1. Implementation contract\n2. Proxy contract\n3. Proxy points to implementation
+
+@enduml

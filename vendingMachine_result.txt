@@ -1,0 +1,23 @@
+$ npm run deploy:local
+
+> vending-machine-v1@1.0.0 deploy:local
+> hardhat run scripts/deploy.js --network hardhat
+
+🚀 Déploiement du VendingMachine V1...
+📚 ProductLibrary déployée à: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+🏪 VendingMachine V1 (Proxy) déployé à: 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
+📝 Adresses sauvegardées dans deployed-addresses.json
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+$ npm run deploy:sepolia
+
+> vending-machine-v1@1.0.0 deploy:sepolia
+> hardhat run scripts/deploy.js --network sepolia
+
+🚀 Déploiement du VendingMachine V1...
+📚 ProductLibrary déployée à: 0x7A6B53EDd630A75e60D74412552B237faAB5933d
+🏪 VendingMachine V1 (Proxy) déployé à: 0x0eBc275C9167DB23958245E77AeA7B43fFa969B5
+📝 Adresses sauvegardées dans deployed-addresses.json

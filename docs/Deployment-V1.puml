@@ -1,0 +1,89 @@
+@startuml VendingMachine Deployment Diagram
+!theme mars
+title Vending Machine V1 - Deployment Diagram
+
+node "Developer Machine" {
+  component [Hardhat Development Environment] as HardhatDev
+  component [React Frontend] as Frontend
+  component [Node.js Runtime] as NodeJS
+  
+  artifact "VendingMachineV1.sol" as Contract
+  artifact "ProductLibrary.sol" as Library
+  artifact "deploy.js" as DeployScript
+  artifact "products.csv" as ProductData
+  
+  HardhatDev --> Contract : compiles
+  HardhatDev --> Library : compiles
+  HardhatDev --> DeployScript : executes
+  DeployScript --> ProductData : reads
+  
+  Frontend --> NodeJS : runs on
+}
+
+cloud "Ethereum Networks" {
+  node "Local Network (Hardhat Node)" as LocalNetwork {
+    component [JSON-RPC Server] as RPCLocal
+    database "Local Blockchain" as LocalChain
+    
+    artifact "VendingMachine Proxy" as LocalProxy
+    artifact "VendingMachine Implementation" as LocalImpl
+    artifact "ProductLibrary" as LocalLibrary
+    
+    RPCLocal --> LocalChain : serves
+    LocalProxy --> LocalImpl : delegates
+    LocalImpl --> LocalLibrary : uses
+  }
+  
+  node "Sepolia Testnet" as Sepolia {
+    component [Ethereum Validators] as Validators
+    database "Sepolia Blockchain" as SepoliaChain
+    
+    artifact "VendingMachine Proxy" as SepoliaProxy
+    artifact "VendingMachine Implementation" as SepoliaImpl
+    artifact "ProductLibrary" as SepoliaLibrary
+    
+    Validators --> SepoliaChain : maintains
+    SepoliaProxy --> SepoliaImpl : delegates
+    SepoliaImpl --> SepoliaLibrary : uses
+  }
+}
+
+node "User Browser" {
+  component [MetaMask Extension] as MetaMask
+  component [Web Browser] as Browser
+  component [React App (Built)] as ReactApp
+  
+  Browser --> ReactApp : renders
+  ReactApp --> MetaMask : connects to
+}
+
+cloud "Infrastructure Services" {
+  node "Alchemy" as Alchemy {
+    component [RPC API] as AlchemyRPC
+  }
+  
+  node "IPFS (Optional)" as IPFS {
+    artifact "Frontend Assets" as StaticFiles
+  }
+}
+
+' Deployment connections
+HardhatDev --> LocalNetwork : deploys to (localhost)
+HardhatDev --> Sepolia : deploys to (via Alchemy)
+HardhatDev --> AlchemyRPC : uses for Sepolia
+
+' Runtime connections
+MetaMask --> RPCLocal : connects (local dev)
+MetaMask --> AlchemyRPC : connects (testnet)
+AlchemyRPC --> Sepolia : proxies to
+
+' Configuration
+note right of LocalNetwork : Port: 8545\nChain ID: 31337\nAccounts: Test accounts
+
+note right of Sepolia : Chain ID: 11155111\nPublic testnet\nFaucet required
+
+note left of MetaMask : Manages:\n- Private keys\n- Network switching\n- Transaction signing
+
+note bottom of ReactApp : Builds to static files\nCan be deployed to:\n- Vercel\n- Netlify\n- IPFS\n- GitHub Pages
+
+@enduml

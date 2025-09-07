@@ -1,0 +1,146 @@
+@startuml VendingMachineV2_Governance_SequenceDiagram
+!theme plain
+skinparam backgroundColor #F9F9F9
+skinparam sequenceArrowColor #2E8B57
+skinparam participantBorderColor #555555
+skinparam participantBackgroundColor #E8F0E8
+skinparam noteBackgroundColor #FFFFE0
+skinparam noteBorderColor #AAAAAA
+skinparam sequenceGroupBackgroundColor #DCEBDC
+skinparam sequenceGroupBorderColor #2E8B57
+skinparam shadowing true
+
+title VendingMachine DAO V2 - Processus de Gouvernance Complet
+
+actor Alice as A #ADD8E6
+actor Bob as B #FFDAB9
+actor Charlie as C #F5DEB3
+
+participant "VendingMachineV2" as VM #C0FFC0
+participant "GovernanceToken" as Token #FFE4B5
+participant "VendingGovernor" as Governor #FFB6C1
+participant "TimelockController" as Timelock #E6E6FA
+
+== Phase 1: Acquisition de Tokens de Gouvernance ==
+group Achat de tokens
+A -> VM: buyProduct(1, {value: 0.1 ETH})
+activate VM
+VM -> VM: product.stock -= 1
+VM -> VM: totalRevenue += 0.01 ETH
+VM -> Token: mintForPurchase(Alice, 0.01 ETH)
+activate Token
+Token -> Token: mint(Alice, 10 VEND tokens)
+Token -> A: GovernanceTokensEarned(10 VEND)
+deactivate Token
+VM -> A: ProductPurchased + RefundSent(0.09 ETH)
+deactivate VM
+
+B -> VM: buyProduct(1, {value: 0.05 ETH})
+VM -> Token: mintForPurchase(Bob, 0.01 ETH)
+Token -> Token: mint(Bob, 10 VEND tokens)
+end
+
+== Phase 2: Délégation des Votes ==
+group Délégation
+A -> Token: delegate(Alice.address)
+activate Token
+Token -> Token: _delegate(Alice, Alice)
+Token -> A: DelegateChanged(Alice, Alice)
+deactivate Token
+
+note right of Token: Alice peut maintenant voter\navec ses 10 tokens
+
+B -> Token: delegate(Alice.address)
+Token -> Token: _delegate(Bob, Alice)
+
+note right of Token: Alice a maintenant le pouvoir\nde vote de Bob aussi (20 tokens total)
+end
+
+== Phase 3: Création de Proposition ==
+group Proposition
+A -> Governor: propose(targets, values, calldatas, "Add Red Bull")
+activate Governor
+Governor -> Token: getVotes(Alice)
+Token -> Governor: 20 tokens
+alt 20 tokens < proposalThreshold
+  Governor -> Governor: ❌ Revert: below threshold
+else 100+ tokens acquis
+  A -> VM: buyProduct(1, {value: 1 ETH})
+  VM -> Token: mintForPurchase(Alice, 0.01 ETH)
+  Token -> Token: mint(Alice, 10 more VEND)
+  
+  A -> Governor: propose(targets, values, calldatas, "Add Red Bull")
+  Governor -> Token: getVotes(Alice)
+  Token -> Governor: 100+ tokens ✅
+  Governor -> Governor: proposalId = createProposal()
+  Governor -> A: ProposalCreated(proposalId, Alice, ...)
+end
+deactivate Governor
+end
+
+== Phase 4: Période de Vote ==
+note over Governor: Voting Delay (1 block)
+...1 block later...
+note over Governor: Voting Period Active (~1 week)
+
+group Vote
+A -> Governor: castVote(proposalId, 1) // POUR
+activate Governor
+Governor -> Token: getPastVotes(Alice, proposalSnapshot)
+Token -> Governor: 100 tokens
+Governor -> Governor: record vote FOR with 100 weight
+Governor -> A: VoteCast(Alice, proposalId, 1, 100)
+deactivate Governor
+
+B -> Governor: castVote(proposalId, 0) // CONTRE  
+Governor -> Token: getPastVotes(Bob, proposalSnapshot)
+Token -> Governor: 0 tokens (delegated to Alice)
+Governor -> Governor: ❌ Revert: no voting power
+
+C -> VM: buyProduct(1, {value: 0.5 ETH})
+VM -> Token: mintForPurchase(Charlie, 0.01 ETH)
+C -> Token: delegate(Charlie.address)
+C -> Governor: castVote(proposalId, 1) // POUR
+Governor -> Governor: record vote FOR with 10 weight
+end
+
+note over Governor: Voting Period Ends\nstate = Succeeded (quorum met)
+
+== Phase 5: Exécution via Timelock ==
+group Execution
+A -> Governor: queue(targets, values, calldatas, descriptionHash)
+activate Governor
+Governor -> Timelock: schedule(targets, values, calldatas, predecessor, salt, delay)
+activate Timelock
+Timelock -> Timelock: schedule for execution in 2 days
+Timelock -> Governor: CallScheduled(...)
+deactivate Timelock
+Governor -> A: ProposalQueued(proposalId, eta)
+deactivate Governor
+
+note over Timelock: Timelock Delay (2 days)
+...2 days later...
+
+A -> Governor: execute(targets, values, calldatas, descriptionHash)
+activate Governor
+Governor -> Timelock: execute(targets, values, calldatas, predecessor, salt)
+activate Timelock
+Timelock -> VM: addProduct(2, "Red Bull", 0.025 ETH, 15)
+activate VM
+VM -> VM: products[2] = Product(...)
+VM -> VM: productIds.push(2)
+VM -> Timelock: ✅ Success
+deactivate VM
+Timelock -> Governor: CallExecuted(...)
+deactivate Timelock
+Governor -> A: ProposalExecuted(proposalId)
+deactivate Governor
+end
+
+== Résultat Final ==
+note over VM: Nouveau produit "Red Bull"\najouté par décision DAO
+
+A -> VM: getProduct(2)
+VM -> A: Product(2, "Red Bull", 0.025 ETH, 15)
+
+@enduml

@@ -1,0 +1,105 @@
+@startuml VendingMachine Class Diagram
+!theme mars
+title Vending Machine V1 - Class Diagram
+
+' Smart Contracts
+abstract class Initializable {
+  + _disableInitializers()
+  + initializer() <<modifier>>
+}
+
+abstract class OwnableUpgradeable {
+  - _owner : address
+  + owner() : address
+  + onlyOwner() <<modifier>>
+  + transferOwnership(address)
+}
+
+abstract class UUPSUpgradeable {
+  + _authorizeUpgrade(address)
+  + upgradeTo(address)
+}
+
+class Product <<struct>> {
+  + id : uint256
+  + name : string
+  + price : uint256
+  + stock : uint256
+}
+
+class ProductLibrary <<library>> {
+  + calculateTotal(qty:uint256, price:uint256) : uint256
+  + validateStock(p:Product, qty:uint256) : bool
+  + validateProductId(id:uint256) : bool
+  + calculateRefund(paid:uint256, price:uint256) : uint256
+}
+
+class VendingMachineV1 {
+  - products : Map<uint256, Product>
+  - productIds : uint256[]
+  + initialize()
+  + addProduct(id:uint256, name:string, price:uint256, stock:uint256)
+  + buyProduct(id:uint256) <<payable>>
+  + getProducts() : Product[]
+  + getProduct(id:uint256) : Product
+  + getProductCount() : uint256
+  + withdraw()
+  + _authorizeUpgrade(address)
+}
+
+' React Components
+class App {
+  - account : string
+  - products : Product[]
+  - purchaseHistory : Purchase[]
+  + render()
+}
+
+class Header {
+  - account : string
+  - onConnect : function
+  + render()
+}
+
+class Catalog {
+  - products : Product[]
+  - onPurchase : function
+  - isLoading : bool
+  + render()
+}
+
+class ProductCard {
+  - product : Product
+  - onPurchase : function
+  - purchasing : bool
+  + handlePurchase()
+  + render()
+}
+
+class PurchaseHistory {
+  - purchases : Purchase[]
+  + render()
+}
+
+class useContract <<hook>> {
+  - account : string
+  - products : Product[]
+  - contract : Contract
+  - signer : Signer
+  + connectWallet()
+  + loadProducts()
+  + buyProduct(id:uint256, value:BigNumber)
+}
+
+' Relations
+VendingMachineV1 *-- Product
+VendingMachineV1 ..> ProductLibrary
+App o-- Header
+App o-- Catalog
+App o-- PurchaseHistory
+Catalog ..> ProductCard
+App ..> useContract
+Catalog ..> useContract
+ProductCard ..> useContract
+
+@enduml

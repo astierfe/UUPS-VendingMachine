@@ -1,0 +1,116 @@
+@startuml Purchase Activity Diagram
+!theme mars
+title Vending Machine V1 - Purchase Activity Diagram
+
+|User|
+start
+:Open DApp;
+:View product catalog;
+
+if (Wallet connected?) then (no)
+  :Click "Connect MetaMask";
+  :Approve wallet connection;
+else (yes)
+endif
+
+:Browse available products;
+:Select product to purchase;
+
+|Frontend|
+if (Product in stock?) then (no)
+  :Display "Out of stock";
+  :Disable purchase button;
+  stop
+else (yes)
+  :Display product price;
+  :Enable purchase button;
+endif
+
+|User|
+:Click "Acheter" button;
+
+|Frontend|
+:Trigger buyProduct function;
+:Show loading state;
+
+|MetaMask|
+:Display transaction popup;
+:Show gas fee estimate;
+
+|User|
+if (Approve transaction?) then (no)
+  :Reject transaction;
+  |Frontend|
+  :Hide loading state;
+  :Show "Transaction cancelled";
+  stop
+else (yes)
+  :Approve transaction;
+endif
+
+|MetaMask|
+:Sign transaction;
+:Submit to network;
+
+|Blockchain|
+:Validate transaction;
+fork
+  :Check product exists;
+  if (Product exists?) then (no)
+    :Revert "Product does not exist";
+    |User|
+    :Receive error message;
+    stop
+  else (yes)
+  endif
+fork again
+  :Check stock availability;
+  if (Stock > 0?) then (no)
+    :Revert "Out of stock";
+    |User|
+    :Receive error message;
+    stop
+  else (yes)
+  endif
+fork again
+  :Validate payment amount;
+  if (Payment >= price?) then (no)
+    :Revert "Insufficient payment";
+    |User|
+    :Receive error message;
+    stop
+  else (yes)
+  endif
+end fork
+
+:Decrement product stock;
+:Calculate refund (if overpaid);
+
+if (Refund needed?) then (yes)
+  :Transfer refund to buyer;
+  :Emit RefundSent event;
+else (no)
+endif
+
+:Emit ProductPurchased event;
+:Transaction successful;
+
+|Frontend|
+:Listen for transaction confirmation;
+:Update local state;
+:Add to purchase history;
+:Refresh product catalog;
+:Show success message;
+
+|User|
+:View confirmation;
+:See updated stock;
+:Check purchase history;
+note left: Automatic refunds\nhandle overpayments
+stop
+
+note right: All validations must pass\nfor successful purchase
+note left: Events provide\nreal-time updates
+
+
+@enduml

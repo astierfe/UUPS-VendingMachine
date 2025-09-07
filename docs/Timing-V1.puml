@@ -1,0 +1,89 @@
+@startuml Timing Diagram
+!theme aws-orange
+title Vending Machine V1 - Transaction Timing Diagram
+
+robust "User Interface" as UI
+robust "MetaMask" as MM
+robust "Blockchain Network" as BC
+robust "Smart Contract" as SC
+
+@0
+UI is Idle
+MM is Connected
+BC is Ready
+SC is Listening
+
+@1
+UI is "ButtonClick"
+note left : User clicks "Acheter"
+
+@2
+UI is Loading
+MM is TransactionRequest
+note left : buyProduct() triggered
+
+@3
+MM is UserPrompt
+note right of MM : MetaMask popup shown
+
+@7
+MM is Signing
+note right of MM : User approves transaction
+
+@8
+MM is Submitting
+BC is Validating
+
+@10
+BC is Processing
+SC is Executing
+note left of BC : Transaction in mempool
+
+@15
+BC is Confirming
+SC is Validating
+note left of SC : Contract validations
+
+@16
+SC is UpdateStock
+note left of SC : Stock decremented
+
+@17
+SC is CalculatingRefund
+note left of SC : Refund calculated
+
+@18
+SC is TransferringRefund
+note left of SC : Refund sent (if needed)
+
+@19
+SC is EmittingEvents
+note left of SC : Events emitted
+
+@20
+BC is Confirmed
+SC is Complete
+MM is Success
+
+@21
+UI is Success
+note left of UI : Success toast shown
+
+@25
+UI is Idle
+MM is Connected
+BC is Ready
+SC is Listening
+note left of UI : Ready for next transaction
+
+' Time annotations
+@0 <-> @1 : ~0ms
+@1 <-> @2 : ~100ms
+@2 <-> @3 : ~200ms
+@3 <-> @7 : User dependent (5-60s)
+@7 <-> @8 : ~500ms
+@8 <-> @10 : ~1-2s
+@10 <-> @20 : ~12-15s (block time)
+@20 <-> @25 : ~1s
+
+@enduml

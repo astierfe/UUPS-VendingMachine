@@ -1,0 +1,158 @@
+@startuml VendingMachineV2_DeploymentDiagram
+!theme plain
+
+title VendingMachine DAO V2 - Diagramme de Déploiement
+
+node "Development Environment" {
+  node "Hardhat Network" {
+    component "Local Blockchain" as LocalBC {
+      artifact "Block 0" as Genesis
+      artifact "Block N" as CurrentBlock
+      artifact "EVM State" as State
+    }
+  }
+  
+  component "Node.js Runtime" {
+    artifact "hardhat.config.js" as Config
+    artifact "deploy-v2.js" as DeployScript
+    artifact "test-governance.js" as TestScript
+  }
+}
+
+node "Ethereum Network" {
+  node "Blockchain Layer" {
+    component "EVM" {
+      artifact "Transaction Pool" as TxPool
+      artifact "State Trie" as StateTrie
+      artifact "Storage Slots" as Storage
+    }
+  }
+}
+
+package "Smart Contracts Deployment" {
+  
+  node "V1 Contracts (Existing)" {
+    artifact "VendingMachineV1.sol" as V1Impl #lightblue
+    artifact "ProductLibrary.sol" as Lib #lightyellow
+    artifact "ERC1967Proxy" as Proxy #lightgreen
+    
+    note right of Proxy
+      Proxy → V1Impl
+      Storage in Proxy
+    end note
+  }
+  
+  node "V2 Governance Contracts (New)" {
+    artifact "GovernanceToken.sol" as TokenImpl #orange
+    artifact "VendingGovernor.sol" as GovImpl #red  
+    artifact "TimelockController.sol" as TimelockImpl #purple
+    artifact "VendingMachineV2.sol" as V2Impl #darkgreen
+  }
+  
+  node "Upgrade Process" {
+    artifact "ProxyAdmin" as Admin #gray
+    artifact "Upgrade Transaction" as UpgradeTx #yellow
+    
+    note right of UpgradeTx
+      Changes Proxy target:
+      V1Impl → V2Impl
+      Preserves all storage
+    end note
+  }
+}
+
+package "Frontend Deployment" {
+  node "React Application" {
+    artifact "App.jsx" as ReactApp
+    artifact "contract.js" as ContractUtils
+    artifact "useContract.js" as Hook
+  }
+  
+  node "Web Browser" {
+    artifact "MetaMask Extension" as MetaMask
+    artifact "Web3 Provider" as Provider
+  }
+}
+
+' Deployment relationships
+Config --> LocalBC : configures
+DeployScript --> V1Impl : deploys
+DeployScript --> Proxy : creates
+DeployScript --> TokenImpl : deploys
+DeployScript --> GovImpl : deploys  
+DeployScript --> TimelockImpl : deploys
+DeployScript --> V2Impl : deploys
+DeployScript --> UpgradeTx : executes
+
+' Runtime relationships  
+Proxy --> V1Impl : delegates to (initially)
+UpgradeTx --> Proxy : upgrades target
+Proxy --> V2Impl : delegates to (after upgrade)
+
+V2Impl --> TokenImpl : controls
+GovImpl --> TokenImpl : reads votes
+GovImpl --> TimelockImpl : queues in
+TimelockImpl --> Proxy : executes on
+
+' Frontend connections
+ReactApp --> MetaMask : connects to
+MetaMask --> Provider : provides
+Provider --> Proxy : interacts with
+
+' Storage mapping
+StateTrie --> Storage : contains
+Storage --> Proxy : stores data for
+
+' Simulated environments
+node "Local Development" {
+  LocalBC --> StateTrie : simulates
+  TestScript --> LocalBC : tests against
+}
+
+node "Testnet/Mainnet" {
+  EVM --> StateTrie : maintains
+  TxPool --> EVM : processes via
+}
+
+note bottom of V1Impl
+  **V1 Implementation:**
+  • Original business logic
+  • Product management
+  • Simple ownership model
+  • Direct admin functions
+end note
+
+note bottom of V2Impl  
+  **V2 Implementation:**
+  • Inherits all V1 functionality
+  • Adds governance integration
+  • Token minting on purchases
+  • onlyGovernance modifiers
+  • Revenue tracking
+end note
+
+note bottom of TokenImpl
+  **Governance Token:**
+  • ERC20 with voting extensions
+  • Minted by VendingMachine only
+  • 1000 tokens per ETH spent
+  • Delegatable voting power
+end note
+
+note bottom of GovImpl
+  **Governor Contract:**
+  • Proposal creation & voting
+  • Quorum & threshold checks
+  • Integration with Timelock
+  • OpenZeppelin Governor standard
+end note
+
+note bottom of TimelockImpl
+  **Timelock Controller:**
+  • 2-day execution delay
+  • Security against quick attacks
+  • Role-based access control
+  • Final execution authority
+end note
+
+@enduml

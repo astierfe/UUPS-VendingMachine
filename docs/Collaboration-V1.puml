@@ -1,0 +1,45 @@
+@startuml Communication Diagram
+!theme mars
+title Vending Machine V1 - Communication Diagram (Product Purchase)
+
+object ":User" as User
+object ":ProductCard" as ProductCard
+object ":useContract" as Hook
+object ":ethers.Contract" as Contract
+object ":MetaMask" as MetaMask
+object ":VendingMachineProxy" as Proxy
+object ":VendingMachineV1" as Implementation
+object ":ProductLibrary" as Library
+
+User -> ProductCard : 1: click "Acheter"
+ProductCard -> Hook : 2: buyProduct(id, price)
+Hook -> Hook : 3: validateWalletConnection()
+Hook -> Contract : 4: buyProduct(id, {value: price})
+Contract -> MetaMask : 5: requestTransaction()
+MetaMask -> User : 6: showTransactionPopup()
+User -> MetaMask : 7: approveTransaction()
+MetaMask -> Contract : 8: signedTransaction
+Contract -> Proxy : 9: buyProduct(id) [delegateCall]
+Proxy -> Implementation : 10: buyProduct(id) [delegateCall]
+Implementation -> Implementation : 11: validateProduct()
+Implementation -> Implementation : 12: validateStock()
+Implementation -> Implementation : 13: validatePayment()
+Implementation -> Library : 14: calculateRefund(paid, required)
+Library -> Implementation : 15: refundAmount
+Implementation -> Implementation : 16: updateStock()
+Implementation -> User : 17: transfer(refund) [if needed]
+Implementation -> Implementation : 18: emit ProductPurchased()
+Implementation -> Proxy : 19: success
+Proxy -> Contract : 20: transactionReceipt
+Contract -> Hook : 21: confirmation
+Hook -> Hook : 22: updatePurchaseHistory()
+Hook -> Hook : 23: reloadProducts()
+Hook -> ProductCard : 24: success
+ProductCard -> User : 25: showSuccessToast()
+
+note right of User : User initiates purchase\nand approves transaction
+note bottom of Hook : Manages state and\nblockchain interactions
+note left of Implementation : Core business logic\nexecuted via proxy
+note top of Library : Pure functions for\ncalculations
+
+@enduml

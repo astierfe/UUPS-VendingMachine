@@ -1,0 +1,95 @@
+@startuml VendingMachine V2 - Architecture
+!theme plain
+skinparam componentStyle uml2
+skinparam linetype ortho
+
+title VendingMachine DAO V2 - Architecture Complète
+
+package "Frontend Layer" {
+  [React App] as Frontend
+  [MetaMask] as Wallet
+}
+
+package "Smart Contracts Layer" {
+  
+  package "Core Business" {
+    [VendingMachineV1] as V1 #lightblue
+    [VendingMachineV2] as V2 #lightgreen
+    [ProductLibrary] as Lib #lightyellow
+    
+    V2 --> V1 : UUPS Upgrade
+    V2 --> Lib : uses
+  }
+  
+  package "Governance System" {
+    [GovernanceToken] as Token #orange
+    [VendingGovernor] as Governor #red
+    [TimelockController] as Timelock #purple
+    
+    Governor --> Token : votes from
+    Governor --> Timelock : executes via
+    Timelock --> V2 : controls
+  }
+  
+  package "OpenZeppelin Libraries" {
+    [ERC20Votes] as ERC20V #lightgray
+    [Governor] as GovBase #lightgray
+    [TimelockController] as TimelockBase #lightgray
+    [UUPS] as UUPSBase #lightgray
+    
+    Token --> ERC20V : extends
+    Governor --> GovBase : extends
+    Timelock --> TimelockBase : extends
+    V2 --> UUPSBase : extends
+  }
+}
+
+package "Blockchain Layer" {
+  database "Ethereum Network" {
+    [Storage Slots V1] as StorageV1
+    [Storage Slots V2] as StorageV2
+    [Events & Logs] as Events
+  }
+}
+
+' Relationships
+Frontend --> Wallet : connects
+Wallet --> V2 : transactions
+V2 --> StorageV1 : preserves
+V2 --> StorageV2 : adds new
+V2 --> Events : emits
+
+Token --> V2 : minted by purchases
+V2 --> Token : mints governance tokens
+
+' Governance Flow
+Governor ..> Token : reads voting power
+Governor ..> Timelock : schedules execution
+Timelock ..> V2 : executes proposals
+
+note right of V2
+  **V2 New Features:**
+  • Governance integration
+  • Token minting on purchases
+  • onlyGovernance modifier
+  • Revenue tracking
+  • Distribution functions
+end note
+
+note right of Token
+  **VEND Token:**
+  • 1 ETH purchase = 1000 VEND
+  • ERC20Votes standard
+  • Delegatable voting power
+  • Minted by VendingMachine
+end note
+
+note right of Governor
+  **Governance Process:**
+  • 100 VEND threshold
+  • 1 week voting period
+  • 4% quorum required
+  • Timelock protection
+end note
+
+@enduml

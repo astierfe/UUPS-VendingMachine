@@ -1,0 +1,40 @@
+{
+  "name": "vending-machine-v1",
+  "version": "1.0.0",
+  "description": "Smart contract de distributeur automatique upgradable",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "test:coverage": "npx hardhat coverage",
+    "deploy:local": "hardhat run scripts/deploy.js --network hardhat",
+    "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
+    "populate": "hardhat run scripts/populate-products.js --network hardhat",
+    "populate:sepolia": "hardhat run scripts/populate-products.js --network sepolia",
+    "node": "hardhat node",
+    "frontend": "cd frontend && npm run dev",
+    "verify:sepolia": "hardhat verify --network sepolia"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@nomiclabs/hardhat-waffle": "^2.0.5",
+    "@types/chai": "^4.3.6",
+    "@types/mocha": "^10.0.2",
+    "chai": "^4.3.8",
+    "ethereum-waffle": "^3.4.4",
+    "hardhat": "^2.14.1",
+    "hardhat-gas-reporter": "^1.0.9",
+    "solidity-coverage": "^0.8.4",
+    "ts-node": "^10.9.1",
+    "typechain": "^8.3.1",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.9.6",
+    "@openzeppelin/contracts-upgradeable": "^4.9.6",
+    "@openzeppelin/hardhat-upgrades": "^1.28.0",
+    "@typechain/hardhat": "^7.0.0",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^16.6.1",
+    "ethers": "^5.8.0"
+  }
+}
