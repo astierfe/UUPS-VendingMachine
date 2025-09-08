@@ -1,8 +1,14 @@
-# Vending Machine V1 - Ethereum DApp
-
-## Overview
-
-This decentralized application (DApp) implements a virtual vending machine on the Ethereum blockchain. Users can browse a product catalog and make purchases by paying directly with ETH. The project uses the upgradeable proxy pattern (UUPS) to enable evolution to V2 without losing state or changing the contract address.
+<table style="border: none; border-collapse: collapse;">
+<tr>
+  <td style="border: none; padding: 0;">
+    <img src="./MyVendingMachineV2_logo.png" alt="Logo VendingMachine" width="350"/>
+  </td>
+  <td style="border: none; padding-left: 10px; vertical-align: top;">
+    <h2>Overview</h2>
+        This decentralized application (DApp) implements a virtual vending machine on the Ethereum blockchain. Users can browse a product catalog and make purchases by paying directly with ETH. The project uses the upgradeable proxy pattern (UUPS) to enable evolution to V2 without losing state or changing the contract address.
+  </td>
+</tr>
+</table>
 
 ## Technical Architecture
 
