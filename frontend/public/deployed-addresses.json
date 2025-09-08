@@ -1,7 +1,11 @@
 {
-  "productLibrary": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-  "vendingMachineProxy": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-  "network": "localhost",
-  "chainId": 31337,
-  "deployedAt": "2025-09-06T08:30:06.046Z"
+  "productLibrary": "0x7A6B53EDd630A75e60D74412552B237faAB5933d",
+  "vendingMachineProxy": "0x0eBc275C9167DB23958245E77AeA7B43fFa969B5",
+  "network": "sepolia",
+  "chainId": 11155111,
+  "deployedAt": "2025-09-08T12:00:00.000Z",
+  "vendingMachineV2Implementation": "0x9846894DF6DD9B20832fE489757214eCD61a50ff",
+  "version": "2.0.0",
+  "upgradedAt": "2025-09-08T13:55:27.372Z",
+  "previousVersion": "1.0.0"
 }

@@ -1,128 +1,262 @@
 /**
- * @fileoverview Main App component for VendingMachine V1 DApp
- * @description Root component that manages the application layout and navigation
- * @author Félicien ASTIER - Alchemy Ethereum Bootcamp Project
+ * @fileoverview Main application component for VendingMachine V2 DApp
+ * @description Enhanced app with admin interface and analytics
+ * @author Felicien ASTIER - Alchemy Ethereum Bootcamp Project - V2 Enhanced
  */
 
 import React, { useState } from 'react';
 import {
   ChakraProvider,
   Container,
+  Box,
   VStack,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
   Tabs,
   TabList,
   TabPanels,
   Tab,
   TabPanel,
-  Alert,
-  AlertIcon,
-  AlertTitle,
-  AlertDescription,
-  Box,
   useColorModeValue
 } from '@chakra-ui/react';
 
-// Import custom components
+// Import all components
 import Header from './components/Header';
-import Footer from './components/Footer';
 import Catalog from './components/Catalog';
 import PurchaseHistory from './components/PurchaseHistory';
+import Admin from './components/Admin';
+import Footer from './components/Footer';
 
-// Import custom hook for blockchain interaction
+// Import the enhanced contract hook
 import { useContract } from './hooks/useContract';
 
 /**
- * Main App Component
+ * Main Application Component
  * @component
- * @description Root component that provides the main application structure
- * @returns {JSX.Element} The complete VendingMachine DApp interface
+ * @description Entry point for the VendingMachine V2 DApp with admin interface
+ * @returns {JSX.Element} Complete application with all features
  */
 function App() {
-  // Destructure state and functions from the custom useContract hook
-  // This hook manages all blockchain-related state and operations
+  // Get all contract functionality from the enhanced hook
   const {
-    account,          // Connected wallet address (null if not connected)
-    products,         // Array of products from the smart contract
-    loading,          // Loading state for async operations
-    purchaseHistory,  // User's purchase history
-    connectWallet,    // Function to connect MetaMask wallet
-    buyProduct        // Function to purchase a product
+    // V1 core functionality (preserved)
+    account,
+    products,
+    loading,
+    purchaseHistory,
+    connectWallet,
+    buyProduct,
+    loadProducts,
+    
+    // V2 new features
+    isAdmin,
+    salesHistory,
+    analytics,
+    adminLoading,
+    loadAnalytics,
+    
+    // V2 admin functions
+    addProduct,
+    updateProduct,
+    removeProduct
   } = useContract();
 
-  // Get background color based on current color mode (light/dark theme)
-  const bgColor = useColorModeValue('gray.50', 'gray.900');
+  // Local state for tab management
+  const [activeTab, setActiveTab] = useState(0);
+
+  // Dynamic styling
+  const bg = useColorModeValue('gray.50', 'gray.900');
+
+  /**
+   * Handle product purchase with error handling
+   * @async
+   * @function handlePurchase
+   * @param {number} productId - ID of product to purchase
+   * @param {BigNumber} price - Price in wei
+   * @returns {Promise<boolean>} Success status
+   */
+  const handlePurchase = async (productId, price) => {
+    try {
+      return await buyProduct(productId, price);
+    } catch (error) {
+      console.error('Purchase failed:', error);
+      return false;
+    }
+  };
+
+  /**
+   * Handle adding new product (admin only)
+   * @async
+   * @function handleAddProduct
+   * @param {number} id - Product ID
+   * @param {string} name - Product name
+   * @param {string} price - Price in ETH
+   * @param {number} stock - Stock quantity
+   * @returns {Promise<boolean>} Success status
+   */
+  const handleAddProduct = async (id, name, price, stock) => {
+    try {
+      return await addProduct(id, name, price, stock);
+    } catch (error) {
+      console.error('Add product failed:', error);
+      return false;
+    }
+  };
+
+  /**
+   * Handle updating existing product (admin only)
+   * @async
+   * @function handleUpdateProduct
+   * @param {number} id - Product ID
+   * @param {string} name - Product name
+   * @param {string} price - Price in ETH
+   * @param {number} stock - Stock quantity
+   * @returns {Promise<boolean>} Success status
+   */
+  const handleUpdateProduct = async (id, name, price, stock) => {
+    try {
+      return await updateProduct(id, name, price, stock);
+    } catch (error) {
+      console.error('Update product failed:', error);
+      return false;
+    }
+  };
+
+  /**
+   * Handle removing product (admin only)
+   * @async
+   * @function handleRemoveProduct
+   * @param {number} id - Product ID to remove
+   * @returns {Promise<boolean>} Success status
+   */
+  const handleRemoveProduct = async (id) => {
+    try {
+      return await removeProduct(id);
+    } catch (error) {
+      console.error('Remove product failed:', error);
+      return false;
+    }
+  };
+
+  /**
+   * Handle analytics refresh
+   * @async
+   * @function handleLoadAnalytics
+   */
+  const handleLoadAnalytics = async () => {
+    try {
+      await loadAnalytics();
+    } catch (error) {
+      console.error('Load analytics failed:', error);
+    }
+  };
 
   return (
     <ChakraProvider>
-      {/* Main container with full viewport height and responsive background */}
-      <Box minHeight="100vh" bg={bgColor}>
-        <VStack spacing={0} minHeight="100vh">
-          
-          {/* Header component with wallet connection functionality */}
-          <Header account={account} onConnect={connectWallet} />
-          
-          {/* Main content container with responsive max width */}
-          <Container maxW="container.xl" flex="1" py={6}>
-            
-            {/* Alert: MetaMask not detected */}
-            {!window.ethereum && (
-              <Alert status="warning" mb={6} borderRadius="md">
+      <Box minHeight="100vh" bg={bg}>
+        {/* Enhanced Header with admin status */}
+        <Header 
+          account={account}
+          onConnect={connectWallet}
+          isAdmin={isAdmin}
+        />
+
+        <Container maxW="container.xl" py={8}>
+          <VStack spacing={8} align="stretch">
+            {/* Connection Status Alert */}
+            {!account && (
+              <Alert status="warning" borderRadius="lg">
                 <AlertIcon />
                 <Box>
-                  <AlertTitle>MetaMask Required!</AlertTitle>
+                  <AlertTitle>Wallet Not Connected!</AlertTitle>
                   <AlertDescription>
-                    Please install MetaMask browser extension to use this application.
-                    Visit metamask.io to download and install.
+                    Please connect your MetaMask wallet to interact with the vending machine.
                   </AlertDescription>
                 </Box>
               </Alert>
             )}
 
-            {/* Alert: Wallet not connected (but MetaMask is available) */}
-            {!account && window.ethereum && (
-              <Alert status="info" mb={6} borderRadius="md">
-                <AlertIcon />
-                <Box>
-                  <AlertTitle>Wallet Connection Required</AlertTitle>
-                  <AlertDescription>
-                    Connect your MetaMask wallet to access products and make purchases.
-                    Click the "Connect MetaMask" button in the header.
-                  </AlertDescription>
-                </Box>
-              </Alert>
-            )}
-
-            {/* Main navigation tabs */}
-            <Tabs variant="enclosed" colorScheme="blue">
+            {/* Main Content Tabs */}
+            <Tabs 
+              index={activeTab} 
+              onChange={(index) => setActiveTab(index)}
+              variant="enclosed"
+              colorScheme="blue"
+            >
               <TabList>
-                {/* Product catalog tab */}
-                <Tab>🛍️ Product Catalog</Tab>
-                
-                {/* Purchase history tab with dynamic counter */}
-                <Tab>📦 Purchase History ({purchaseHistory.length})</Tab>
+                <Tab>🛒 Store</Tab>
+                <Tab>📋 My Purchases</Tab>
+                {/* Conditionally show admin tab only for admins */}
+                {isAdmin && <Tab>⚙️ Admin</Tab>}
               </TabList>
 
               <TabPanels>
-                {/* Tab Panel 1: Product Catalog */}
+                {/* Store Tab - Product Catalog */}
                 <TabPanel px={0}>
                   <Catalog
-                    products={products}           // Pass products array to catalog
-                    onPurchase={buyProduct}       // Pass purchase function
-                    isLoading={loading}           // Pass loading state
+                    products={products || []} // Provide default empty array
+                    onPurchase={handlePurchase}
+                    isLoading={loading}
                   />
                 </TabPanel>
-                
-                {/* Tab Panel 2: Purchase History */}
+
+                {/* Purchase History Tab */}
                 <TabPanel px={0}>
-                  <PurchaseHistory purchases={purchaseHistory} />
+                  <PurchaseHistory 
+                    purchases={purchaseHistory || []} // Provide default empty array
+                  />
                 </TabPanel>
+
+                {/* Admin Tab - Only visible to admins */}
+                {isAdmin && (
+                  <TabPanel px={0}>
+                    <Admin
+                      products={products || []} // Provide default empty array
+                      analytics={analytics || { // Provide default analytics object
+                        totalSales: 0,
+                        totalRevenue: '0',
+                        totalProducts: 0,
+                        contractBalance: '0'
+                      }}
+                      salesHistory={salesHistory || []} // Provide default empty array
+                      isLoading={loading}
+                      adminLoading={adminLoading}
+                      onAddProduct={handleAddProduct}
+                      onUpdateProduct={handleUpdateProduct}
+                      onRemoveProduct={handleRemoveProduct}
+                      onLoadAnalytics={handleLoadAnalytics}
+                    />
+                  </TabPanel>
+                )}
               </TabPanels>
             </Tabs>
-          </Container>
-          
-          {/* Footer component */}
-          <Footer />
-        </VStack>
+
+            {/* Development Information */}
+            {process.env.NODE_ENV === 'development' && (
+              <Alert status="info" borderRadius="lg">
+                <AlertIcon />
+                <Box>
+                  <AlertTitle>Development Mode</AlertTitle>
+                  <AlertDescription>
+                    {account ? (
+                      <>
+                        Connected as: {account.slice(0, 6)}...{account.slice(-4)}
+                        {isAdmin && ' (Admin)'}
+                      </>
+                    ) : (
+                      'Not connected to blockchain'
+                    )}
+                  </AlertDescription>
+                </Box>
+              </Alert>
+            )}
+          </VStack>
+        </Container>
+
+        {/* Footer */}
+        <Footer />
       </Box>
     </ChakraProvider>
   );

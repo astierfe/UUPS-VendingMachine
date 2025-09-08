@@ -1,7 +1,7 @@
 /**
- * @fileoverview Custom React hook for blockchain interactions
- * @description Manages Web3 connection, contract interactions, and application state
- * @author Felicien ASTIER - Alchemy Ethereum Bootcamp Project
+ * @fileoverview Enhanced React hook for V2 blockchain interactions
+ * @description Manages Web3 connection, V2 contract interactions, admin functions, and analytics
+ * @author Felicien ASTIER - Alchemy Ethereum Bootcamp Project - V2 Enhanced
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -9,79 +9,82 @@ import { ethers } from 'ethers';
 import { getContract, formatEther } from '../utils/contract';
 
 /**
- * Custom hook for managing VendingMachine contract interactions
+ * Custom hook for managing VendingMachine V2 contract interactions
  * @hook
- * @description Provides state management and functions for Web3 operations
+ * @description Provides state management and functions for Web3 operations including admin and analytics
  * @returns {Object} Hook state and functions for blockchain interactions
  */
 export const useContract = () => {
-  // State variables for managing application data
+  // Existing V1 state variables
   const [account, setAccount] = useState(null);           // Connected wallet address
   const [products, setProducts] = useState([]);           // Array of products from contract
   const [loading, setLoading] = useState(false);          // Loading state for async operations
-  const [purchaseHistory, setPurchaseHistory] = useState([]); // User's purchase history
+  const [purchaseHistory, setPurchaseHistory] = useState([]); // User's purchase history (local)
   const [contract, setContract] = useState(null);         // Contract instance
   const [signer, setSigner] = useState(null);             // Ethers signer for transactions
+  
+  // V2 New state variables
+  const [isAdmin, setIsAdmin] = useState(false);          // Whether current user is admin
+  const [salesHistory, setSalesHistory] = useState([]);   // Complete sales history from blockchain
+  const [analytics, setAnalytics] = useState({            // Analytics summary
+    totalSales: 0,
+    totalRevenue: '0',
+    totalProducts: 0,
+    contractBalance: '0'
+  });
+  const [adminLoading, setAdminLoading] = useState(false); // Loading state for admin operations
 
   /**
-   * Connect to MetaMask wallet
+   * Connect to MetaMask wallet (Enhanced for V2)
    * @async
    * @function connectWallet
    * @description Requests wallet connection and sets up event listeners
    * @returns {Promise<void>}
    */
   const connectWallet = async () => {
-    // Check if MetaMask is installed
     if (!window.ethereum) {
       alert('MetaMask is not installed! Please install it from metamask.io');
       return;
     }
 
     try {
-      // Create Web3 provider from MetaMask
       const provider = new ethers.providers.Web3Provider(window.ethereum);
-      
-      // Request account access from MetaMask
       await provider.send("eth_requestAccounts", []);
       
-      // Get signer (account that can sign transactions)
       const signerInstance = provider.getSigner();
       const address = await signerInstance.getAddress();
       
-      // Update state with connection info
       setAccount(address);
       setSigner(signerInstance);
       
-      // Create contract instance with signer for transactions
       try {
         const contractInstance = await getContract(signerInstance);
         setContract(contractInstance);
         console.log("Contract connected:", contractInstance.address);
+        
+        // V2 Enhancement: Check admin status
+        await checkAdminStatus(contractInstance, address);
+        
       } catch (error) {
         console.error("Error connecting to contract:", error);
         alert(`Contract connection error: ${error.message}`);
       }
       
-      // Set up event listeners for MetaMask changes
-      // Listen for account changes (user switches account)
+      // Set up event listeners
       window.ethereum.on('accountsChanged', (accounts) => {
         if (accounts.length === 0) {
-          // User disconnected
           setAccount(null);
           setSigner(null);
           setContract(null);
+          setIsAdmin(false); // V2: Reset admin status
         } else {
-          // User switched to different account
           setAccount(accounts[0]);
-          // Reconnect contract with new account
           connectContract(accounts[0]);
         }
       });
 
-      // Listen for network changes (user switches network)
       window.ethereum.on('chainChanged', (chainId) => {
         console.log("Network changed:", chainId);
-        // Reload page to reconnect to correct contract
         window.location.reload();
       });
       
@@ -92,11 +95,30 @@ export const useContract = () => {
   };
 
   /**
+   * Check if current account is admin
+   * @async
+   * @function checkAdminStatus
+   * @param {Object} contractInstance - Contract instance
+   * @param {string} address - Account address to check
+   * @description Verifies admin privileges for the connected account
+   */
+  const checkAdminStatus = async (contractInstance, address) => {
+    try {
+      const adminStatus = await contractInstance.isAdmin(address);
+      setIsAdmin(adminStatus);
+      console.log("Admin status for", address, ":", adminStatus);
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      setIsAdmin(false);
+    }
+  };
+
+  /**
    * Reconnect contract when account changes
    * @async
    * @function connectContract
    * @param {string} accountAddress - The new account address
-   * @description Reconnects to contract with new signer
+   * @description Reconnects to contract with new signer and checks admin status
    */
   const connectContract = async (accountAddress) => {
     try {
@@ -104,6 +126,10 @@ export const useContract = () => {
       const signerInstance = provider.getSigner();
       const contractInstance = await getContract(signerInstance);
       setContract(contractInstance);
+      
+      // V2: Check admin status for new account
+      await checkAdminStatus(contractInstance, accountAddress);
+      
       console.log("Contract reconnected for:", accountAddress);
     } catch (error) {
       console.error("Error reconnecting contract:", error);
@@ -111,31 +137,28 @@ export const useContract = () => {
   };
 
   /**
-   * Load products from the smart contract
+   * Load products from the smart contract (Enhanced for V2)
    * @async
    * @function loadProducts
    * @description Fetches all products and formats them for frontend display
    * @returns {Promise<void>}
    */
   const loadProducts = useCallback(async () => {
-    // Return early if contract is not available
     if (!contract) return;
     
     setLoading(true);
     try {
       console.log("Loading products from:", contract.address);
       
-      // Call the getProducts function on the smart contract
       const productsList = await contract.getProducts();
       console.log("Products received:", productsList);
       
-      // Format products for frontend use
       const formattedProducts = productsList.map(product => ({
-        id: Number(product.id),                           // Convert BigNumber to number
-        name: product.name,                               // Keep as string
-        price: formatEther(product.price),                // Convert wei to ETH string
-        priceWei: product.price,                          // Keep original wei value for transactions
-        stock: Number(product.stock)                      // Convert BigNumber to number
+        id: Number(product.id),
+        name: product.name,
+        price: formatEther(product.price),
+        priceWei: product.price,
+        stock: Number(product.stock)
       }));
       
       console.log("Products formatted:", formattedProducts);
@@ -144,7 +167,6 @@ export const useContract = () => {
     } catch (error) {
       console.error('Error loading products:', error);
       
-      // Provide detailed error diagnosis
       if (error.code === 'CALL_EXCEPTION') {
         console.error("Contract does not exist at this address or method not found");
         console.error("Contract address:", contract?.address);
@@ -156,16 +178,59 @@ export const useContract = () => {
   }, [contract]);
 
   /**
-   * Purchase a product
+   * Load analytics data from blockchain
+   * @async
+   * @function loadAnalytics
+   * @description Fetches analytics summary and sales history
+   * @returns {Promise<void>}
+   */
+  const loadAnalytics = useCallback(async () => {
+    if (!contract) return;
+    
+    try {
+      // Get analytics summary
+      const analyticsSummary = await contract.getAnalyticsSummary();
+      setAnalytics({
+        totalSales: Number(analyticsSummary.totalSales),
+        totalRevenue: formatEther(analyticsSummary.totalRevenue),
+        totalProducts: Number(analyticsSummary.totalProducts),
+        contractBalance: formatEther(analyticsSummary.contractBalance)
+      });
+
+      // Get sales history (limit to recent 100 for performance)
+      const totalSales = Number(analyticsSummary.totalSales);
+      if (totalSales > 0) {
+        const limit = Math.min(100, totalSales);
+        const offset = Math.max(0, totalSales - limit);
+        
+        const salesData = await contract.getSalesHistoryPaginated(offset, limit);
+        const formattedSales = salesData.map((sale, index) => ({
+          id: offset + index,
+          productId: Number(sale.productId),
+          buyer: sale.buyer,
+          price: formatEther(sale.price),
+          timestamp: new Date(Number(sale.timestamp) * 1000).toLocaleString(),
+          blockNumber: Number(sale.blockNumber)
+        }));
+        
+        setSalesHistory(formattedSales.reverse()); // Show newest first
+      }
+      
+    } catch (error) {
+      console.error('Error loading analytics:', error);
+    }
+  }, [contract]);
+
+  /**
+   * Purchase a product (Enhanced with V2 analytics)
    * @async
    * @function buyProduct
    * @param {number} productId - ID of the product to purchase
    * @param {BigNumber} price - Price in wei
-   * @description Handles the complete purchase flow including transaction and state updates
+   * @description Handles the complete purchase flow
    * @returns {Promise<boolean>} Success status of the purchase
    */
   const buyProduct = async (productId, price) => {
-    // Validate prerequisites
     if (!contract || !signer) {
       alert('Please connect your wallet first');
       return false;
@@ -176,15 +241,12 @@ export const useContract = () => {
       
       console.log(`Purchasing product ${productId} for ${formatEther(price)} ETH`);
       
-      // Send transaction to smart contract
       const tx = await contract.buyProduct(productId, {
-        value: price,           // Amount of ETH to send
-        gasLimit: 100000       // Gas limit for the transaction
+        value: price,
+        gasLimit: 150000 // Increased gas limit for V2 analytics
       });
       
       console.log("Transaction sent:", tx.hash);
-      
-      // Wait for transaction to be mined
       await tx.wait();
       console.log("Transaction confirmed");
       
@@ -192,23 +254,25 @@ export const useContract = () => {
       const product = products.find(p => p.id === productId);
       if (product) {
         setPurchaseHistory(prev => [...prev, {
-          id: Date.now(),                                 // Unique identifier for history entry
-          productId,                                      // Product that was purchased
-          name: product.name,                             // Product name
-          price: product.price,                           // Price paid (in ETH string)
-          timestamp: new Date().toLocaleString()          // Human-readable timestamp
+          id: Date.now(),
+          productId,
+          name: product.name,
+          price: product.price,
+          timestamp: new Date().toLocaleString()
         }]);
       }
       
-      // Reload products to update stock levels
+      // Reload products and analytics to reflect the purchase
       await loadProducts();
+      if (isAdmin) {
+        await loadAnalytics();
+      }
       
       return true;
       
     } catch (error) {
       console.error('Purchase error:', error);
       
-      // Provide user-friendly error messages
       let errorMessage = error.message;
       if (error.message.includes("insufficient funds")) {
         errorMessage = "Insufficient ETH balance for this purchase";
@@ -226,10 +290,155 @@ export const useContract = () => {
     }
   };
 
+  // ========== V2 ADMIN FUNCTIONS ==========
+
+  /**
+   * Add a new product (Admin only)
+   * @async
+   * @function addProduct
+   * @param {number} id - Product ID
+   * @param {string} name - Product name
+   * @param {string} priceEth - Price in ETH (string)
+   * @param {number} stock - Initial stock
+   * @returns {Promise<boolean>} Success status
+   */
+  const addProduct = async (id, name, priceEth, stock) => {
+    if (!contract || !isAdmin) {
+      alert('Admin access required');
+      return false;
+    }
+
+    try {
+      setAdminLoading(true);
+      
+      const priceWei = ethers.utils.parseEther(priceEth);
+      const tx = await contract.addProduct(id, name, priceWei, stock);
+      
+      console.log("Adding product, transaction:", tx.hash);
+      await tx.wait();
+      console.log("Product added successfully");
+      
+      await loadProducts();
+      await loadAnalytics();
+      
+      return true;
+      
+    } catch (error) {
+      console.error('Add product error:', error);
+      
+      let errorMessage = error.message;
+      if (error.message.includes("Product already exists")) {
+        errorMessage = "Product ID already exists. Use a different ID or update the existing product.";
+      } else if (error.message.includes("Access denied")) {
+        errorMessage = "Admin access required to add products";
+      }
+      
+      alert(`Failed to add product: ${errorMessage}`);
+      return false;
+      
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
+  /**
+   * Update an existing product (Admin only)
+   * @async
+   * @function updateProduct
+   * @param {number} id - Product ID
+   * @param {string} name - Product name
+   * @param {string} priceEth - Price in ETH (string)
+   * @param {number} stock - Stock quantity
+   * @returns {Promise<boolean>} Success status
+   */
+  const updateProduct = async (id, name, priceEth, stock) => {
+    if (!contract || !isAdmin) {
+      alert('Admin access required');
+      return false;
+    }
+
+    try {
+      setAdminLoading(true);
+      
+      const priceWei = ethers.utils.parseEther(priceEth);
+      const tx = await contract.updateProduct(id, name, priceWei, stock);
+      
+      console.log("Updating product, transaction:", tx.hash);
+      await tx.wait();
+      console.log("Product updated successfully");
+      
+      await loadProducts();
+      await loadAnalytics();
+      
+      return true;
+      
+    } catch (error) {
+      console.error('Update product error:', error);
+      
+      let errorMessage = error.message;
+      if (error.message.includes("Product does not exist")) {
+        errorMessage = "Product not found. Please check the product ID.";
+      } else if (error.message.includes("Access denied")) {
+        errorMessage = "Admin access required to update products";
+      }
+      
+      alert(`Failed to update product: ${errorMessage}`);
+      return false;
+      
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
+  /**
+   * Remove a product (Admin only)
+   * @async
+   * @function removeProduct
+   * @param {number} id - Product ID to remove
+   * @returns {Promise<boolean>} Success status
+   */
+  const removeProduct = async (id) => {
+    if (!contract || !isAdmin) {
+      alert('Admin access required');
+      return false;
+    }
+
+    try {
+      setAdminLoading(true);
+      
+      const tx = await contract.removeProduct(id);
+      
+      console.log("Removing product, transaction:", tx.hash);
+      await tx.wait();
+      console.log("Product removed successfully");
+      
+      await loadProducts();
+      await loadAnalytics();
+      
+      return true;
+      
+    } catch (error) {
+      console.error('Remove product error:', error);
+      
+      let errorMessage = error.message;
+      if (error.message.includes("Product does not exist")) {
+        errorMessage = "Product not found. It may have already been removed.";
+      } else if (error.message.includes("Access denied")) {
+        errorMessage = "Admin access required to remove products";
+      }
+      
+      alert(`Failed to remove product: ${errorMessage}`);
+      return false;
+      
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
+  // ========== EFFECTS ==========
+
   /**
    * Load products when contract becomes available
-   * @effect
-   * @description Automatically loads products when contract is connected
    */
   useEffect(() => {
     if (contract) {
@@ -238,9 +447,16 @@ export const useContract = () => {
   }, [contract, loadProducts]);
 
   /**
+   * Load analytics when contract becomes available and user is admin
+   */
+  useEffect(() => {
+    if (contract && isAdmin) {
+      loadAnalytics();
+    }
+  }, [contract, isAdmin, loadAnalytics]);
+
+  /**
    * Auto-connect wallet if previously connected
-   * @effect
-   * @description Checks for existing connection on component mount
    */
   useEffect(() => {
     const checkConnection = async () => {
@@ -249,7 +465,6 @@ export const useContract = () => {
           const provider = new ethers.providers.Web3Provider(window.ethereum);
           const accounts = await provider.listAccounts();
           
-          // If accounts exist, user was previously connected
           if (accounts.length > 0) {
             const signerInstance = provider.getSigner();
             const address = await signerInstance.getAddress();
@@ -257,10 +472,10 @@ export const useContract = () => {
             setAccount(address);
             setSigner(signerInstance);
             
-            // Connect to contract
             try {
               const contractInstance = await getContract(signerInstance);
               setContract(contractInstance);
+              await checkAdminStatus(contractInstance, address);
               console.log("Auto-connected to contract:", contractInstance.address);
             } catch (error) {
               console.error("Error during auto-connection to contract:", error);
@@ -273,16 +488,29 @@ export const useContract = () => {
     };
 
     checkConnection();
-  }, []); // Empty dependency array = run once on mount
+  }, []);
 
   // Return all state and functions for use by components
   return {
-    account,          // Connected wallet address
-    products,         // Array of formatted products
-    loading,          // Loading state for UI feedback
-    purchaseHistory,  // Array of user purchases
-    connectWallet,    // Function to connect wallet
-    buyProduct,       // Function to purchase products
-    loadProducts      // Function to manually reload products
+    // V1 compatibility
+    account,
+    products,
+    loading,
+    purchaseHistory,
+    connectWallet,
+    buyProduct,
+    loadProducts,
+    
+    // V2 new features
+    isAdmin,
+    salesHistory,
+    analytics,
+    adminLoading,
+    loadAnalytics,
+    
+    // V2 admin functions
+    addProduct,
+    updateProduct,
+    removeProduct
   };
 };

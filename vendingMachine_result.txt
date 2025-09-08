@@ -1,15 +1,5 @@
-$ npm run deploy:local
-
-> vending-machine-v1@1.0.0 deploy:local
-> hardhat run scripts/deploy.js --network hardhat
-
-🚀 Déploiement du VendingMachine V1...
-📚 ProductLibrary déployée à: 0x5FbDB2315678afecb367f032d93F642f64180aa3
-🏪 VendingMachine V1 (Proxy) déployé à: 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
-📝 Adresses sauvegardées dans deployed-addresses.json
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ V1 SEPOLIA\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 $ npm run deploy:sepolia
@@ -21,3 +11,117 @@ $ npm run deploy:sepolia
 📚 ProductLibrary déployée à: 0x7A6B53EDd630A75e60D74412552B237faAB5933d
 🏪 VendingMachine V1 (Proxy) déployé à: 0x0eBc275C9167DB23958245E77AeA7B43fFa969B5
 📝 Adresses sauvegardées dans deployed-addresses.json
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ V2 SEPOLIA\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+33645@DESKTOP-M85U4MN MINGW64 /c/_Felix/formations/myVendingMachine (main)
+$ npx hardhat run scripts/deploy-v2.js --network sepolia
+🚀 Upgrading VendingMachine V1 to V2...
+📋 Loaded existing deployment: {
+  productLibrary: '0x7A6B53EDd630A75e60D74412552B237faAB5933d',
+  vendingMachineProxy: '0x0eBc275C9167DB23958245E77AeA7B43fFa969B5',
+  network: 'sepolia',
+  chainId: 11155111,
+  deployedAt: '2025-09-08T12:00:00.000Z'
+}
+🔍 Existing proxy address: 0x0eBc275C9167DB23958245E77AeA7B43fFa969B5
+🏭 Getting contract factories...
+📥 Registering existing proxy with OpenZeppelin...
+✅ Proxy successfully registered
+⬆️  Upgrading proxy to V2 implementation...
+✅ Upgrade completed! Proxy still at: 0x0eBc275C9167DB23958245E77AeA7B43fFa969B5
+🔧 Initializing V2 storage...
+✅ V2 initialization completed
+🔍 Verifying upgrade...
+📊 Contract version: 2.0.0
+📈 Total sales recorded: 0
+📊 Analytics Summary:
+  - Total Sales: 0
+  - Total Revenue: 0.01 ETH
+  - Total Products: 10
+  - Contract Balance: 0.01 ETH
+🛍️  Products preserved:  10
+💾 Updated addresses saved to deployed-addresses.json
+📋 Updated addresses copied to frontend/public/
+
+🎉 VendingMachine V2 Upgrade Completed Successfully!
+═══════════════════════════════════════════════════════
+✅ Proxy Address (UNCHANGED): 0x0eBc275C9167DB23958245E77AeA7B43fFa969B5
+✅ New V2 Implementation: 0x9846894DF6DD9B20832fE489757214eCD61a50ff
+✅ All V1 data preserved
+✅ New V2 features available
+
+📱 Your frontend will automatically use V2 features!
+
+👑 Admin Access:
+  - Deployer Address: 0xf350B91b403ced3c6E68d34C13eBdaaE3bbd4E01
+  - Has Admin Access: ✅ YES
+═══════════════════════════════════════════════════════
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\   V1 LOCAL \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+$ npm run deploy:local
+
+🚀 Déploiement du VendingMachine V1...
+📚 ProductLibrary déployée à: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+🏪 VendingMachine V1 (Proxy) déployé à: 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
+📝 Adresses sauvegardées dans deployed-addresses.json
+📋 Adresses copiées vers frontend/public/deployed-addresses.json
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\   V2 LOCAL \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+$ npx hardhat run scripts/deploy-v2.js --network localhost
+🚀 Upgrading VendingMachine V1 to V2...
+📋 Loaded existing deployment: {
+  productLibrary: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
+  vendingMachineProxy: '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',
+  network: 'localhost',
+  chainId: 31337,
+  deployedAt: '2025-09-08T12:23:10.650Z'
+}
+🔍 Existing proxy address: 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
+🏭 Getting VendingMachineV2 factory...
+⬆️  Upgrading proxy to V2 implementation...
+✅ Upgrade completed! Proxy still at: 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
+🔧 Initializing V2 storage...
+✅ V2 initialization completed
+📊 Contract version: 2.0.0
+📈 Total sales recorded: 0
+📊 Analytics Summary:
+  - Total Sales: 0
+  - Total Revenue: 0.0 ETH
+  - Total Products: 10
+  - Contract Balance: 0.0 ETH
+💾 Updated addresses saved to deployed-addresses.json
+📋 Updated addresses copied to frontend/public/deployed-addresses.json
+
+🎉 VendingMachine V2 Upgrade Completed Successfully!
+════════════════════════════════════════════════════════
+✅ Proxy Address (UNCHANGED): 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
+✅ New Implementation: 0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82
+✅ All V1 data preserved (products, balances)
+✅ New V2 features available (admin interface, analytics)
+
+🔄 No frontend changes needed - same contract address!
+📱 The DApp will automatically use V2 features
+
+👑 Admin Access:
+  - Deployer Address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+  - Has Admin Access: ✅ YES
+  - You can access the admin interface in the DApp
+════════════════════════════════════════════════════════
+🔍 Verifying V2 upgrade...
+✅ Version check passed: 2.0.0
+✅ Analytics function accessible
+✅ Admin verification function working
+✅ V1 compatibility maintained - products: 10
+🎉 All V2 functions verified successfully!

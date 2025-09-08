@@ -12,7 +12,8 @@
     "populate:sepolia": "hardhat run scripts/populate-products.js --network sepolia",
     "node": "hardhat node",
     "frontend": "cd frontend && npm run dev",
-    "verify:sepolia": "hardhat verify --network sepolia"
+    "verify:sepolia": "hardhat verify --network sepolia",
+    "coverage": "hardhat coverage"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.2.3",
