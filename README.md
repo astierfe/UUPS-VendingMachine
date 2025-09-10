@@ -4,7 +4,7 @@
   <table border="0" style="border: none;">
     <tr>
       <td align="center" style="border: none;">
-        <img src="./UUPS-Vending-Machine-logo.png" alt="UUPS VendingMachine Logo" width="200"/>
+        <img src="./UUPS-Vending-Machine-logo.png" alt="UUPS VendingMachine Logo" width="300"/>
       </td>
       <td align="left" style="border: none;">
         <h3>Project Overview</h3>
