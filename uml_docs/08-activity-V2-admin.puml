@@ -1,0 +1,221 @@
+@startuml UUPS-VendingMachine-V2_8-activity-admin
+!theme mars
+skinparam backgroundColor white
+
+title UUPS-VendingMachine V2 - Activity Diagram\nAdmin Management Workflows
+
+|#LightBlue|Admin Authentication|
+start
+:Admin connects MetaMask wallet;
+:DApp checks wallet address;
+if (isAdmin(address) == true?) then (yes)
+  :Show Admin Dashboard;
+  :Enable admin functions;
+else (no)
+  :Show regular user interface;
+  :Hide admin controls;
+  stop
+endif
+
+|#LightGreen|Product Management|
+:Admin selects action;
+switch (Admin Action?)
+case (Add Product)
+  :Open "Add Product" modal;
+  :Fill form:
+  - Product ID
+  - Product name  
+  - Price in ETH
+  - Initial stock;
+  
+  if (Form validation passes?) then (yes)
+    if (Product ID unique?) then (yes)
+      :Call addProduct() contract function;
+      :Wait for transaction confirmation;
+      if (Transaction successful?) then (yes)
+        :Emit ProductAdded event;
+        :Update product catalog;
+        :Show success notification;
+        :Close modal;
+      else (no)
+        :Show error message;
+        :Keep modal open for retry;
+      endif
+    else (no)
+      :Show error: "Product ID exists";
+      :Suggest using Update instead;
+    endif
+  else (no)
+    :Highlight validation errors;
+    :Keep form open;
+  endif
+
+case (Update Product)
+  :Select existing product from list;
+  :Open "Edit Product" modal;
+  :Pre-fill form with current values;
+  :Admin modifies desired fields;
+  
+  if (Form validation passes?) then (yes)
+    :Call updateProduct() contract function;
+    :Wait for transaction confirmation;
+    if (Transaction successful?) then (yes)
+      :Emit ProductUpdated event;
+      :Refresh product display;
+      :Show success notification;
+      :Close modal;
+    else (no)
+      :Show transaction error;
+      :Keep modal open for retry;
+    endif
+  else (no)
+    :Show validation errors;
+    :Keep form open;
+  endif
+
+case (Remove Product)
+  :Select product to delete;
+  :Show confirmation dialog:
+  "Delete [ProductName]?
+  This action cannot be undone";
+  
+  if (Admin confirms deletion?) then (yes)
+    :Call removeProduct() contract function;
+    :Wait for transaction confirmation;
+    if (Transaction successful?) then (yes)
+      :Emit ProductRemoved event;
+      :Remove from product list;
+      :Show success notification;
+    else (no)
+      :Show transaction error;
+    endif
+  else (no)
+    :Cancel deletion;
+    :Return to product list;
+  endif
+
+case (View Analytics)
+  |#LightCoral|Analytics Dashboard|
+  :Load analytics data;
+  :Call getAnalyticsSummary();
+  :Display key metrics:
+  - Total sales count
+  - Total revenue in ETH
+  - Active products count
+  - Contract balance;
+  
+  :Render analytics charts;
+  
+  switch (Analytics Action?)
+  case (View Sales History)
+    :Call getSalesHistory();
+    :Display paginated sales table;
+    :Show transaction details:
+    - Product sold
+    - Buyer address
+    - Price paid
+    - Timestamp;
+  case (Product Performance)
+    :Call getProductRevenue() for each product;
+    :Generate revenue comparison;
+    :Show best/worst performers;
+  case (Time-based Reports)
+    :Show date range picker;
+    :Admin selects time period;
+    :Call getSalesByTimeRange();
+    :Generate filtered report;
+  case (Export Data)
+    :Format analytics data;
+    :Generate CSV/PDF report;
+    :Download to admin device;
+  endswitch
+  
+case (Contract Management)
+  |#LightYellow|System Administration|
+  switch (System Action?)
+  case (Withdraw Funds)
+    :Show current contract balance;
+    :Display withdrawal confirmation:
+    "Withdraw [X] ETH to owner?";
+    
+    if (Admin confirms withdrawal?) then (yes)
+      :Call withdraw() contract function;
+      :Wait for transaction confirmation;
+      if (Transaction successful?) then (yes)
+        :Transfer ETH to owner;
+        :Update balance display;
+        :Show success notification;
+      else (no)
+        :Show withdrawal error;
+      endif
+    else (no)
+      :Cancel withdrawal;
+    endif
+    
+  case (View Contract Info)
+    :Display contract details:
+    - Proxy address
+    - Implementation version
+    - Owner address
+    - Deployment date;
+    
+  case (Upgrade Contract)
+    note right
+    **Upgrade Process**
+    Requires separate deployment script
+    Not available in DApp UI
+    Admin must use Hardhat commands
+    end note
+    :Show upgrade instructions;
+    :Display current version info;
+  endswitch
+
+endswitch
+
+|#LightGray|Error Handling|
+if (Any transaction fails?) then (yes)
+  :Parse error message;
+  switch (Error Type?)
+  case (Gas estimation failed)
+    :Show "Increase gas limit" suggestion;
+  case (Insufficient funds)
+    :Show "Add ETH to wallet" message;
+  case (Access denied)
+    :Verify admin permissions;
+    :Show "Admin access required" error;
+  case (Network error)
+    :Show "Check network connection";
+    :Suggest retry;
+  endswitch
+  :Log error for debugging;
+else (no)
+endif
+
+|#LightBlue|Session Management|
+:Continue admin session;
+if (Admin disconnects wallet?) then (yes)
+  :Clear admin state;
+  :Hide admin controls;
+  :Return to public interface;
+  stop
+else (no)
+  :Keep admin session active;
+  :Monitor for wallet changes;
+endif
+
+:Admin completes task;
+:Return to dashboard;
+stop
+
+note right
+**V2 Admin Features:**
+• Complete CRUD operations for products
+• Real-time analytics and reporting  
+• Revenue tracking and performance metrics
+• Secure access control with role verification
+• Transaction history and audit trails
+• Error handling and user feedback
+• Session management and security
+end note
+
+@enduml

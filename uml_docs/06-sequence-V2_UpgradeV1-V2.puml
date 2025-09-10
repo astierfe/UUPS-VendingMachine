@@ -1,0 +1,128 @@
+@startuml UUPS-VendingMachine-V2_6-sequence-upgrade
+!theme mars
+skinparam backgroundColor white
+
+
+title UUPS-VendingMachine V2 - Sequence Diagram\nUpgrade Process V1 to V2
+
+actor "Contract Owner" as Owner
+participant "Hardhat Script\n(deploy-v2.js)" as Script
+participant "UUPS Proxy\n(ERC1967)" as Proxy
+participant "VendingMachineV1\n(Old Implementation)" as V1Impl
+participant "VendingMachineV2\n(New Implementation)" as V2Impl
+database "Contract Storage" as Storage
+participant "Ethereum Network" as Network
+
+note over Owner, Network : **Pre-Upgrade State: V1 Active**
+
+Owner -> Script : Execute upgrade command\nnpx hardhat run deploy-v2.js
+activate Script
+
+Script -> Script : Load existing proxy address\nfrom deployed-addresses.json
+Script -> Script : Compile V2 implementation\nsolidity compilation
+
+note right of Script : **Step 1: Prepare V2 Implementation**
+
+Script -> Network : Deploy V2 implementation contract
+activate Network
+Network -> V2Impl : Create new contract instance
+activate V2Impl
+Network --> Script : Return V2 implementation address
+deactivate Network
+
+note over Script, V2Impl : **Step 2: Upgrade Authorization Check**
+
+Script -> Proxy : Call upgradeProxy(proxyAddress, V2Factory)
+activate Proxy
+
+Proxy -> V1Impl : Check _authorizeUpgrade(newImpl)\n[via delegatecall]
+activate V1Impl
+
+V1Impl -> V1Impl : Verify onlyOwner modifier
+alt Owner authorized
+  V1Impl --> Proxy : Authorization granted
+  deactivate V1Impl
+else Not authorized
+  V1Impl --> Proxy : Revert: "Ownable: caller not owner"
+  Proxy --> Script : Transaction reverted
+  Script --> Owner : Upgrade failed
+end
+
+note over Proxy, Storage : **Step 3: Implementation Switch**
+
+Proxy -> Proxy : Update _IMPLEMENTATION_SLOT\nto V2 address
+Proxy -> Storage : Preserve all existing data\n(products, balances, etc.)
+
+note right of Storage : **Critical: No data migration needed**\nStorage layout preserved
+
+Proxy --> Script : Upgrade transaction successful
+deactivate Proxy
+
+note over Script, V2Impl : **Step 4: V2 Initialization**
+
+Script -> Proxy : Call initializeV2()\n[delegated to V2]
+activate Proxy
+
+Proxy -> V2Impl : initializeV2() via delegatecall
+activate V2Impl
+
+V2Impl -> V2Impl : Check reinitializer(2) modifier
+V2Impl -> Storage : Initialize new V2 variables:\n- deploymentTimestamp\n- totalEthCollected = current balance\n- salesHistory = empty array
+
+V2Impl -> V2Impl : Emit V2InitializationEvent
+V2Impl --> Proxy : Initialization complete
+deactivate V2Impl
+
+Proxy --> Script : initializeV2() successful
+deactivate Proxy
+
+note over Script, Network : **Step 5: Verification & Finalization**
+
+Script -> Proxy : Call version() to verify upgrade
+activate Proxy
+Proxy -> V2Impl : version() via delegatecall
+V2Impl --> Proxy : Return "2.0.0"
+Proxy --> Script : Version confirmed
+deactivate Proxy
+
+Script -> Script : Update deployed-addresses.json:\n- version: "2.0.0"\n- upgradedAt: timestamp\n- v2Implementation: address
+
+Script -> Script : Copy addresses to frontend/public/
+
+Script --> Owner : Upgrade completed successfully:\n✅ V2 implementation active\n✅ All V1 data preserved\n✅ New V2 features available
+
+deactivate Script
+deactivate V2Impl
+
+note over Owner, Network : **Post-Upgrade State: V2 Active**
+
+== Verification of Upgrade Success ==
+
+Owner -> Proxy : Test V1 compatibility:\ngetProducts()
+activate Proxy
+Proxy -> V2Impl : getProducts() via delegatecall
+V2Impl -> Storage : Read existing products
+Storage --> V2Impl : Return product array
+V2Impl --> Proxy : Products data
+Proxy --> Owner : ✅ V1 functions work
+deactivate Proxy
+
+Owner -> Proxy : Test V2 new features:\ngetAnalyticsSummary()
+activate Proxy
+Proxy -> V2Impl : getAnalyticsSummary() via delegatecall
+V2Impl -> Storage : Read analytics data
+Storage --> V2Impl : Analytics summary
+V2Impl --> Proxy : Analytics data
+Proxy --> Owner : ✅ V2 features available
+deactivate Proxy
+
+note over Owner, Network
+**Upgrade Success Criteria Met:**
+• Same proxy address maintained
+• All V1 data accessible
+• V2 features functional
+• Zero downtime achieved
+• Backward compatibility confirmed
+end note
+
+@enduml

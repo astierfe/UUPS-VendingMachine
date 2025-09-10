@@ -1,0 +1,72 @@
+@startuml UUPS-VendingMachine-V2_10b-usecase-admin
+!theme mars
+skinparam backgroundColor white
+skinparam note {
+  BackgroundColor #FFFACD
+  BorderColor #DAA520
+}
+title UUPS-VendingMachine V2 - Use Case Diagram\nAdmin Management Interface (V2)
+
+' Actors
+actor "Customer" as Customer
+actor "Admin" as Admin
+
+' System boundary - vertical layout
+rectangle "Admin Interface V2" {
+  
+  ' Admin Access (top)
+  usecase "Access Admin Panel" as UC7
+  
+  ' Product Management (middle)  
+  usecase "Add Product" as UC1
+  usecase "Update Product" as UC2
+  usecase "Remove Product" as UC3
+  
+  ' Analytics Dashboard (bottom)
+  usecase "View Analytics\nDashboard" as UC4
+  usecase "Export Sales Data" as UC5
+  usecase "Monitor Revenue" as UC6
+}
+
+' External Systems
+rectangle "External" {
+  usecase "Blockchain\nTransaction" as EXT1
+  usecase "MetaMask\nAuthentication" as EXT2
+}
+
+' Inheritance
+Admin --|> Customer : inherits
+
+' Admin Actions - vertical flow
+Admin --> UC7 : accesses admin panel
+UC7 --> UC1 : creates products
+UC7 --> UC2 : modifies products  
+UC7 --> UC3 : deletes products
+UC7 --> UC4 : views dashboard
+UC7 --> UC5 : exports reports
+UC7 --> UC6 : monitors revenue
+
+' Dependencies
+UC7 ..> EXT2 : <<include>>
+UC1 ..> EXT1 : <<include>>
+UC2 ..> EXT1 : <<include>>
+UC3 ..> EXT1 : <<include>>
+
+note right of Admin
+**Admin Capabilities**
+• Manage product catalog
+• View sales analytics
+• Export business reports
+• Monitor revenue metrics
+end note
+
+note bottom of UC4
+**V2 Analytics Dashboard**
+Real-time metrics:
+• Total sales count
+• Revenue tracking
+• Product performance
+• Sales history
+end note
+
+@enduml

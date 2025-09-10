@@ -21,21 +21,7 @@
   </table>
 </div>
 
-**Live Demo**: [https://astierfe.github.io/UUPS-VendingMachine/](https://astierfe.github.io/UUPS-VendingMachine/) - Try the DApp directly with a non-admin account on Sepolia testnet!
-
-## Table of Contents
-
-- [Why UUPS VendingMachine?](#why-uups-vendingmachine)
-- [Features](#features)
-- [UML Documentation](#uml-documentation)
-- [Architecture](#architecture)
-- [Installation & Setup](#installation--setup)
-- [Usage Guide](#usage-guide)
-- [Smart Contract Details](#smart-contract-details)
-- [Acknowledgments](#acknowledgments)
-- [Support](#support)
-
-## Why UUPS VendingMachine?
+## 🎯 Why UUPS VendingMachine?
 
 ### The Challenge
 Traditional smart contracts face a fundamental limitation: immutability. While this ensures security and trust, it creates significant challenges for real-world applications that need to evolve, fix bugs, or add features. Businesses operating vending machines need flexibility to:
@@ -81,11 +67,11 @@ This project demonstrates enterprise-grade blockchain development with productio
 - **Event Logging**: Comprehensive blockchain event emission
 - **Backward Compatibility**: All V1 functions preserved and enhanced
 
-## UML Documentation
+## 📊 UML Documentation
 
 This project includes comprehensive UML diagrams documenting the complete architecture and functionality of the UUPS VendingMachine V2. All diagrams are available in high-quality SVG format for optimal viewing and printing.
 
-### Architectural Diagrams
+### 🏗️ Architectural Diagrams
 
 - [**System Architecture**](./uml_docs/UUPS-VendingMachine-V2_1-Architecture.svg) - Complete system overview with all components and their interactions
 - [**Component Diagram**](./uml_docs/UUPS-VendingMachine-V2_2-Components_A4.svg) - Detailed component relationships and dependencies
@@ -93,7 +79,7 @@ This project includes comprehensive UML diagrams documenting the complete archit
 - [**Class Diagram**](./uml_docs/UUPS-VendingMachine-V2_4-Classes.svg) - Smart contract structure and inheritance patterns
 - [**Package Diagram**](./uml_docs/UUPS-VendingMachine-V2_5-packages.svg) - Code organization and module structure
 
-### Behavioral Diagrams
+### 🔄 Behavioral Diagrams
 
 - [**Upgrade Sequence V1→V2**](./uml_docs/UUPS-VendingMachine-V2_6-sequence-upgrade.svg) - UUPS upgrade process flow
 - [**Purchase Sequence**](./uml_docs/UUPS-VendingMachine-V2_7-sequence-buy-product.svg) - Complete product purchase workflow
@@ -101,13 +87,13 @@ This project includes comprehensive UML diagrams documenting the complete archit
 - [**MetaMask State Machine**](./uml_docs/UUPS-VendingMachine-V2_9-state-metamask.svg) - Transaction state transitions
 - [**Analytics Sequence**](./uml_docs/UUPS-VendingMachine-V2_11-sequence-analytics.svg) - V2 analytics and reporting system
 
-### Use Case Diagrams
+### 👥 Use Case Diagrams
 
 - [**Customer Use Cases**](./uml_docs/UUPS-VendingMachine-V2_10a-usecase-customer.svg) - End-user shopping experience
 - [**Admin Use Cases**](./uml_docs/UUPS-VendingMachine-V2_10b-usecase-admin.svg) - Administrative management interface
 - [**Owner Use Cases**](./uml_docs/UUPS-VendingMachine-V2_10c-usecase-owner.svg) - System-level administration
 
-### Diagram Features
+### 📋 Diagram Features
 
 - **Professional Quality**: All diagrams follow UML 2.0 standards and best practices
 - **A4 Optimized**: Designed for perfect printing on A4 paper (portrait/landscape)
@@ -145,12 +131,13 @@ frontend/src/
 ## Installation & Setup
 
 ### Prerequisites
-- Node.js (v20.19.5+)
-- npm (v10.8.2+)
+- Node.js (v20+)
+- npm (v10+)
 - MetaMask /Rabby Wallet Browser extension
 - Git
 
 ### Quick Start
+#### Local
 
 ```bash
 # Clone the repository
@@ -160,13 +147,15 @@ cd uups-vending-machine-v2
 # Install dependencies
 npm install
 
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your configuration
+
 # Compile contracts
 npx hardhat compile
 
 # Run tests
 npm test
-
-#### Local
 
 # Start local blockchain
 npx hardhat node
@@ -182,37 +171,6 @@ npx hardhat run scripts/deploy-v2.js --network localhost
 cd frontend
 npm install
 npm run dev
-```
-
-#### Sepolia
-
-```bash
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your configuration
-
-# Deploy V1 to Sepolia
-npx hardhat run scripts/deploy.js --network sepolia
-
-# Populate with sample products
-npx hardhat run scripts/populate-product.js --network sepolia
-
-# you can test the V1
-
-# Upgrade to V2
-npx hardhat run scripts/deploy-v2.js --network sepolia
-
-# Verify contracts on Etherscan (optional)
-npx hardhat verify --network sepolia CONTRACT_ADDRESS
-
-# Update frontend configuration for Sepolia deployment
-# Edit frontend/src/utils/contract.js with your deployed contract address
-# Start frontend
-cd frontend
-npm install
-npm run dev
-
-```
 ```
 
 ## Usage Guide
@@ -258,6 +216,7 @@ The modular UUPS architecture opens doors to countless innovations:
 - **Gamification**: Achievements, leaderboards, and challenges
 - **B2B Solutions**: White-label deployments for businesses
 - **Mobile Apps**: Native iOS/Android apps with Web3 integration
+
 
 ## Smart Contract Details
 

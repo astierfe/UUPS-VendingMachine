@@ -1,0 +1,162 @@
+@startuml VendingMachine_Classes_A4
+!theme mars
+skinparam backgroundColor rgba(255, 255, 255, 1)
+skinparam dpi 150
+skinparam maxMessageSize 120
+skinparam wrapWidth 180
+skinparam minClassWidth 100
+skinparam nodesep 15
+skinparam ranksep 30
+scale max 1024*768
+title VendingMachine V2 - Class Diagram\nSmart Contract Architecture
+
+' OpenZeppelin Base Classes
+abstract class Initializable {
+  +bool _initialized
+  +bool _initializing
+  --
+  +initialize()
+  +_disableInitializers()
+}
+
+abstract class OwnableUpgradeable {
+  +address _owner
+  --
+  +owner(): address
+  +transferOwnership(address)
+  +renounceOwnership()
+}
+
+abstract class UUPSUpgradeable {
+  --
+  +upgradeTo(address)
+  +upgradeToAndCall(address, bytes)
+  +proxiableUUID(): bytes32
+  +_authorizeUpgrade(address)
+}
+
+' Product Library
+class ProductLibrary <<library>> {
+  +calculateTotal(qty, price): uint256
+  +validateStock(product, qty): bool
+  +validateProductId(id): bool
+  +calculateRefund(paid, price): uint256
+}
+
+' UUPS Proxy
+class ERC1967Proxy {
+  +bytes32 _IMPLEMENTATION_SLOT
+  +bytes32 _ADMIN_SLOT
+  --
+  +constructor(address, bytes)
+  +_delegate(address)
+  +_fallback()
+  +receive()
+}
+
+' VendingMachine V1
+class VendingMachineV1 {
+  +mapping products
+  +uint256[] productIds
+  --
+  +initialize()
+  +addProduct(id, name, price, stock)
+  +buyProduct(id) payable
+  +getProducts(): list
+  +getProduct(id): Product
+  +getProductCount(): uint256
+  +withdraw()
+  +_authorizeUpgrade(address)
+}
+
+' VendingMachine V2
+class VendingMachineV2 {
+  +mapping products
+  +uint256[] productIds
+  +salesHistory
+  +mapping productTotalSales
+  +uint256 totalEthCollected
+  +uint256 deploymentTimestamp
+  --
+  +addProduct(id, name, price, stock)
+  +updateProduct(id, name, price, stock) 
+  +removeProduct(id)
+  +isAdmin(address): bool
+  +getAdmin(): address
+  +buyProduct(id) payable
+  +getSalesHistory(): list
+  +getTotalSales(): uint256
+  +getProductRevenue(id): uint256
+  +getAnalyticsSummary(): tuple
+  +getSalesByTimeRange(start, end): list
+  +initializeV2()
+  +version(): string
+}
+
+' Inheritance Relationships
+VendingMachineV1 --|> Initializable
+VendingMachineV1 --|> OwnableUpgradeable  
+VendingMachineV1 --|> UUPSUpgradeable
+
+VendingMachineV2 --|> Initializable
+VendingMachineV2 --|> OwnableUpgradeable
+VendingMachineV2 --|> UUPSUpgradeable
+
+' Usage Relationships
+VendingMachineV1 ..> ProductLibrary : uses
+VendingMachineV2 ..> ProductLibrary : uses
+ERC1967Proxy ..> VendingMachineV1 : delegates to
+ERC1967Proxy ..> VendingMachineV2 : delegates to
+
+' Upgrade Relationship
+VendingMachineV1 ..> VendingMachineV2 : upgrades to
+
+' Notes
+note top of ProductLibrary
+Shared Library
+Utility functions for product operations
+across all versions
+end note
+
+note right of ERC1967Proxy
+UUPS Proxy
+Single address for all contract versions
+Transparent upgrades
+end note
+
+note bottom of VendingMachineV1
+V1 Implementation
+• Basic vending machine
+• Product management
+• ETH payments
+• Owner controls
+end note
+
+note bottom of VendingMachineV2
+V2 Implementation
+• All V1 functionality
+• Admin interface
+• Sales analytics
+• Enhanced events
+• Backward compatible
+end note
+
+note left of Initializable
+OpenZeppelin
+Upgradeable contract base classes
+providing security and standards
+end note
+
+note as StorageNote
+Storage Layout Preservation
+V2 maintains exact V1 storage layout:
+• products mapping at slot 0
+• productIds array at slot 1
+• New V2 storage appended after
+• No storage conflicts
+• Safe upgrade guaranteed
+end note
+
+StorageNote .. VendingMachineV2
+
+@enduml

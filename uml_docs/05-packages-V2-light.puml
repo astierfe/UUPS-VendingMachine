@@ -1,0 +1,74 @@
+@startuml UUPS-VendingMachine-V2_5-packages
+!theme aws-orange
+skinparam backgroundColor white
+skinparam dpi 100
+skinparam packageStyle rectangle
+skinparam minClassWidth 60
+skinparam maxMessageSize 80
+skinparam wrapWidth 120
+skinparam nodesep 8
+skinparam ranksep 15
+!define DIRECTION top to bottom direction
+scale 0.8
+title UUPS-VendingMachine V2 - Package Diagram\nCode Organization Structure
+
+' Force compact layout with left-right arrangement
+left to right direction
+
+' Row 1 - Smart Contracts & Scripts
+package "contracts" as contracts {
+  artifact "V1.sol" as V1
+  artifact "V2.sol" as V2
+  artifact "Lib.sol" as Lib
+}
+
+package "scripts" as scripts {
+  artifact "deploy.js" as Deploy
+  artifact "deploy-v2.js" as DeployV2
+}
+
+package "test" as test {
+  artifact "V1.test.js" as TestV1
+  artifact "V2.test.js" as TestV2
+}
+
+' Row 2 - Frontend & Config
+package "frontend" as frontend {
+  artifact "components/" as Components
+  artifact "hooks/" as Hooks  
+  artifact "utils/" as Utils
+}
+
+package "config" as config {
+  artifact "hardhat.config.js" as Hardhat
+  artifact "package.json" as Package
+}
+
+package "data" as data {
+  artifact "products.csv" as CSV
+}
+
+' External Dependencies (compact)
+package "dependencies" as deps {
+  artifact "OpenZeppelin" as OZ
+  artifact "React/Ethers" as ReactEthers
+}
+
+' Essential connections only
+V1 --> OZ
+V2 --> OZ
+V2 --> Lib
+Deploy --> V1
+DeployV2 --> V2
+TestV1 --> V1
+TestV2 --> V2
+Components --> Hooks
+Hooks --> Utils
+Utils --> ReactEthers
+
+' Compact notes positioned strategically
+note right of contracts : Smart contracts\nwith UUPS pattern
+note bottom of frontend : React DApp with\nWeb3 integration
+note left of deps : External libraries\nand frameworks
+
+@enduml

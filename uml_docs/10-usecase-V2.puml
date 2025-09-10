@@ -1,0 +1,185 @@
+@startuml UUPS-VendingMachine-V2_10-usecase
+!theme mars
+skinparam backgroundColor white
+skinparam note {
+  BackgroundColor #FFFACD
+  BorderColor #DAA520
+}
+
+title UUPS-VendingMachine V2 - Use Case Diagram\nFunctionalities by Role
+
+' Actors
+actor "Customer" as Customer
+actor "Admin" as Admin
+actor "Contract Owner" as Owner
+
+' System boundary
+rectangle "VendingMachine V2 DApp" {
+  
+  ' Customer Use Cases
+  usecase "Connect Wallet" as UC1
+  usecase "Browse Catalog" as UC2
+  usecase "View Product Details" as UC3
+  usecase "Purchase Product" as UC4
+  usecase "View Purchase History" as UC5
+  usecase "Receive Refund" as UC6
+  
+  ' Admin Use Cases (V2 Enhanced)
+  usecase "Access Admin Dashboard" as UC7
+  usecase "Add New Product" as UC8
+  usecase "Update Product" as UC9
+  usecase "Remove Product" as UC10
+  usecase "View Sales Analytics" as UC11
+  usecase "Export Sales Data" as UC12
+  usecase "Monitor Revenue" as UC13
+  usecase "View Sales History" as UC14
+  
+  ' Owner Use Cases
+  usecase "Withdraw Contract Funds" as UC15
+  usecase "Transfer Ownership" as UC16
+  usecase "Authorize Upgrades" as UC17
+  usecase "Emergency Operations" as UC18
+  
+  ' System Use Cases (Internal)
+  usecase "Validate Transaction" as UC19
+  usecase "Update Stock" as UC20
+  usecase "Record Sale Analytics" as UC21
+  usecase "Emit Events" as UC22
+  usecase "Handle Overpayment" as UC23
+}
+
+' External Systems
+rectangle "External Services" {
+  usecase "MetaMask Integration" as EXT1
+  usecase "Blockchain Interaction" as EXT2
+  usecase "RPC Provider (Alchemy)" as EXT3
+}
+
+' Actor Relationships - Customer
+Customer --> UC1 : connects wallet
+Customer --> UC2 : browses products
+Customer --> UC3 : checks details
+Customer --> UC4 : makes purchase
+Customer --> UC5 : reviews history
+Customer <-- UC6 : automatic refund
+
+' Actor Relationships - Admin (V2 Features)
+Admin --> UC1 : connects as admin
+Admin --> UC7 : accesses dashboard
+Admin --> UC8 : creates products
+Admin --> UC9 : modifies products
+Admin --> UC10 : deletes products
+Admin --> UC11 : views analytics
+Admin --> UC12 : exports reports
+Admin --> UC13 : monitors revenue
+Admin --> UC14 : reviews all sales
+
+' Actor Relationships - Owner
+Owner --> UC1 : connects as owner
+Owner --> UC15 : withdraws ETH
+Owner --> UC16 : changes ownership
+Owner --> UC17 : approves upgrades
+Owner --> UC18 : emergency functions
+
+' Include Relationships
+UC4 ..> UC19 : <<include>>
+UC4 ..> UC20 : <<include>>
+UC4 ..> UC21 : <<include>>
+UC4 ..> UC22 : <<include>>
+UC4 ..> UC23 : <<include>>
+
+UC8 ..> UC19 : <<include>>
+UC9 ..> UC19 : <<include>>
+UC10 ..> UC19 : <<include>>
+
+UC1 ..> EXT1 : <<include>>
+UC4 ..> EXT2 : <<include>>
+UC8 ..> EXT2 : <<include>>
+UC9 ..> EXT2 : <<include>>
+UC10 ..> EXT2 : <<include>>
+UC15 ..> EXT2 : <<include>>
+
+' Extend Relationships
+UC21 ..> UC11 : <<extend>>
+UC21 ..> UC13 : <<extend>>
+UC6 ..> UC4 : <<extend>>
+
+' Generalization (Admin inherits Customer capabilities)
+Admin --|> Customer : inherits
+
+' Generalization (Owner inherits Admin capabilities)  
+Owner --|> Admin : inherits
+
+' Package for V2 Analytics Features
+package "V2 Analytics Module" #LightBlue {
+  usecase "Calculate Revenue Metrics" as V2_1
+  usecase "Generate Time-based Reports" as V2_2
+  usecase "Track Product Performance" as V2_3
+  usecase "Real-time Dashboard Updates" as V2_4
+}
+
+UC11 ..> V2_1 : <<include>>
+UC12 ..> V2_2 : <<include>>
+UC13 ..> V2_3 : <<include>>
+UC7 ..> V2_4 : <<include>>
+
+' Package for V2 Admin Module
+package "V2 Admin Module" #LightGreen {
+  usecase "Verify Admin Permissions" as V2_5
+  usecase "Validate Product Data" as V2_6
+  usecase "Manage Product Lifecycle" as V2_7
+  usecase "Audit Trail Logging" as V2_8
+}
+
+UC7 ..> V2_5 : <<include>>
+UC8 ..> V2_6 : <<include>>
+UC9 ..> V2_6 : <<include>>
+UC10 ..> V2_7 : <<include>>
+UC8 ..> V2_8 : <<include>>
+UC9 ..> V2_8 : <<include>>
+UC10 ..> V2_8 : <<include>>
+
+note top of Customer
+**Regular Users**
+• Browse and purchase products
+• Pay with ETH via MetaMask  
+• Automatic refund handling
+• View personal purchase history
+end note
+
+note right of Admin
+**V2 Enhanced Admin**
+• All customer capabilities
+• Complete product management
+• Real-time analytics dashboard
+• Revenue monitoring and reports
+• Sales data export functionality
+end note
+
+note bottom of Owner
+**System Owner**
+• All admin capabilities
+• Financial operations (withdraw)
+• Contract ownership management
+• Upgrade authorization (UUPS)
+• Emergency system controls
+end note
+
+note left of UC21
+**V2 Analytics Enhancement**
+Every purchase automatically:
+• Records sale details
+• Updates revenue metrics  
+• Tracks product performance
+• Enables real-time reporting
+end note
+
+note right of EXT2
+**Blockchain Integration**
+• Ethereum smart contract calls
+• Transaction processing
+• Event emission and listening
+• UUPS proxy pattern support
+end note
+
+@enduml

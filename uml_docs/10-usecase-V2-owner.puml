@@ -1,0 +1,85 @@
+@startuml UUPS-VendingMachine-V2_10c-usecase-owner
+!theme mars
+skinparam backgroundColor white
+skinparam note {
+  BackgroundColor #FFFACD
+  BorderColor #DAA520
+}
+title UUPS-VendingMachine V2 - Use Case Diagram\nOwner System Administration
+
+' Actors hierarchy
+actor "Customer" as Customer
+actor "Admin" as Admin
+actor "Contract Owner" as Owner
+
+' System boundary - vertical layout
+rectangle "Owner System Controls" {
+  
+  ' Owner Access (top)
+  usecase "Access Owner Panel" as UC1
+  
+  ' Financial Management (middle)
+  usecase "Withdraw Contract\nFunds" as UC2
+  usecase "Check Contract\nBalance" as UC3
+  
+  ' System Administration (bottom)
+  usecase "Transfer\nOwnership" as UC4
+  usecase "Authorize Contract\nUpgrades" as UC5
+  usecase "Emergency\nOperations" as UC6
+}
+
+' External Systems
+rectangle "External" {
+  usecase "UUPS Upgrade\nMechanism" as EXT1
+  usecase "Ethereum\nTransaction" as EXT2
+  usecase "MetaMask Owner\nAuthentication" as EXT3
+}
+
+' Inheritance hierarchy
+Admin --|> Customer : inherits
+Owner --|> Admin : inherits
+
+' Owner Actions - vertical flow
+Owner --> UC1 : accesses owner panel
+UC1 --> UC2 : withdraws ETH
+UC1 --> UC3 : checks balance
+UC1 --> UC4 : transfers ownership
+UC1 --> UC5 : authorizes upgrades
+UC1 --> UC6 : emergency controls
+
+' Dependencies
+UC1 ..> EXT3 : <<include>>
+UC2 ..> EXT2 : <<include>>
+UC4 ..> EXT2 : <<include>>
+UC5 ..> EXT1 : <<include>>
+UC6 ..> EXT2 : <<include>>
+
+note right of Owner
+**Contract Owner Role**
+System-level privileges:
+• Financial operations
+• Contract ownership control
+• Upgrade authorization (UUPS)
+• Emergency interventions
+• All admin + customer functions
+end note
+
+note bottom of UC5
+**UUPS Upgrade Process**
+Owner-controlled upgrades:
+• Authorize new implementations
+• Preserve contract state
+• Maintain same proxy address
+• Zero-downtime deployment
+end note
+
+note left of UC2
+**Financial Management**
+Revenue operations:
+• Withdraw accumulated ETH
+• Check contract balance
+• Transfer funds to owner wallet
+• Financial oversight controls
+end note
+
+@enduml

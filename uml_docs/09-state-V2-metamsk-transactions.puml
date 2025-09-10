@@ -1,0 +1,219 @@
+@startuml UUPS-VendingMachine-V2_9-state-metamask
+!theme mars
+skinparam backgroundColor white
+skinparam note {
+  BackgroundColor #FFFACD
+  BorderColor #DAA520
+}
+
+title UUPS-VendingMachine V2 - State Diagram\nMetaMask Transaction States
+
+[*] --> WalletDisconnected : Initial state
+
+state WalletDisconnected {
+  WalletDisconnected : User wallet not connected
+  WalletDisconnected : DApp shows "Connect MetaMask"
+  WalletDisconnected : No blockchain interaction possible
+}
+
+WalletDisconnected --> Connecting : User clicks "Connect MetaMask"
+
+state Connecting {
+  Connecting : MetaMask extension opening
+  Connecting : Requesting account access
+  Connecting : User authorization pending
+}
+
+Connecting --> WalletConnected : User approves connection
+Connecting --> WalletDisconnected : User rejects connection
+
+state WalletConnected {
+  WalletConnected : Wallet address available
+  WalletConnected : DApp loads user data
+  WalletConnected : Ready for transactions
+}
+
+WalletConnected --> TransactionInitiated : User triggers transaction\n(buyProduct, addProduct, etc.)
+WalletConnected --> WalletDisconnected : User disconnects wallet
+
+state TransactionInitiated {
+  TransactionInitiated : DApp prepares transaction
+  TransactionInitiated : Gas estimation in progress
+  TransactionInitiated : Transaction parameters set
+}
+
+TransactionInitiated --> WaitingSignature : Transaction sent to MetaMask
+TransactionInitiated --> TransactionFailed : Gas estimation fails
+
+state WaitingSignature {
+  WaitingSignature : MetaMask popup displayed
+  WaitingSignature : Transaction details shown
+  WaitingSignature : User decision pending
+  WaitingSignature : - Amount: X ETH
+  WaitingSignature : - Gas: Estimated
+  WaitingSignature : - To: Contract address
+}
+
+WaitingSignature --> TransactionSigned : User approves transaction
+WaitingSignature --> TransactionRejected : User rejects transaction
+
+state TransactionSigned {
+  TransactionSigned : Transaction signed with private key
+  TransactionSigned : Preparing for broadcast
+  TransactionSigned : Nonce assigned
+}
+
+TransactionSigned --> Broadcasting : Sending to network
+
+state Broadcasting {
+  Broadcasting : Transaction sent to mempool
+  Broadcasting : Waiting for miner pickup
+  Broadcasting : Network propagation
+}
+
+Broadcasting --> Pending : Transaction in mempool
+Broadcasting --> TransactionFailed : Network error or rejection
+
+state Pending {
+  Pending : Transaction awaiting confirmation
+  Pending : Included in block candidate
+  Pending : Mining in progress
+  Pending : DApp shows "Transaction pending..."
+}
+
+Pending --> Confirmed : Block mined successfully
+Pending --> TransactionFailed : Transaction reverted
+Pending --> Stuck : Long confirmation time
+
+state Stuck {
+  Stuck : Transaction taking too long
+  Stuck : Low gas price possible
+  Stuck : Network congestion
+}
+
+Stuck --> Confirmed : Eventually confirmed
+Stuck --> TransactionFailed : Dropped from mempool
+Stuck --> Replaced : User sends replacement transaction
+
+state Replaced {
+  Replaced : Higher gas transaction sent
+  Replaced : Original transaction cancelled
+  Replaced : New transaction processing
+}
+
+Replaced --> Pending : Replacement in mempool
+
+state Confirmed {
+  Confirmed : Transaction successful
+  Confirmed : Block confirmation received
+  Confirmed : Smart contract executed
+  Confirmed : Events emitted
+  Confirmed : DApp state updated
+}
+
+Confirmed --> WalletConnected : Ready for next transaction
+
+state TransactionFailed {
+  TransactionFailed : Transaction failed
+  TransactionFailed : Error message displayed
+  TransactionFailed : Possible causes:
+  TransactionFailed : - Insufficient gas
+  TransactionFailed : - Contract revert
+  TransactionFailed : - Network error
+  TransactionFailed : - Insufficient funds
+}
+
+TransactionFailed --> WalletConnected : User acknowledges error
+
+state TransactionRejected {
+  TransactionRejected : User cancelled transaction
+  TransactionRejected : No blockchain interaction
+  TransactionRejected : DApp returns to previous state
+}
+
+TransactionRejected --> WalletConnected : Transaction cancelled
+
+' Network-related state transitions
+WalletConnected --> NetworkError : Network connection lost
+NetworkError --> WalletConnected : Network restored
+NetworkError --> WalletDisconnected : Extended network issues
+
+state NetworkError {
+  NetworkError : RPC connection failed
+  NetworkError : Alchemy node unreachable
+  NetworkError : DApp shows connection error
+}
+
+' Special V2 Admin States
+WalletConnected --> AdminVerification : Admin function requested
+
+state AdminVerification {
+  AdminVerification : Checking isAdmin(address)
+  AdminVerification : Contract call verification
+}
+
+AdminVerification --> AdminTransactionInitiated : Admin verified
+AdminVerification --> AccessDenied : Not admin
+
+state AccessDenied {
+  AccessDenied : Admin access required
+  AccessDenied : Function not available
+  AccessDenied : Show permission error
+}
+
+AccessDenied --> WalletConnected : User acknowledges
+
+state AdminTransactionInitiated {
+  AdminTransactionInitiated : Admin function prepared
+  AdminTransactionInitiated : Higher gas limit set
+  AdminTransactionInitiated : Special validation
+}
+
+AdminTransactionInitiated --> WaitingSignature : Admin tx ready for signature
+
+' Semantic State Colors - Correct PlantUML syntax for state diagrams
+state WalletConnected #90EE90
+state Confirmed #90EE90  
+state AdminTransactionInitiated #90EE90
+
+state TransactionFailed #FFB6C1
+state NetworkError #FFB6C1
+state AccessDenied #FFB6C1
+state TransactionRejected #FFB6C1
+
+state Pending #FFD700
+state WaitingSignature #FFD700
+state Broadcasting #FFD700
+state Stuck #FFA500
+
+state Connecting #E0E0E0
+state WalletDisconnected #E0E0E0
+state AdminVerification #E0E0E0
+
+note right of WalletConnected
+**V2 Enhanced Features**
+• Admin role verification
+• Analytics data loading
+• Real-time balance updates
+• Event listening for UI sync
+end note
+
+note bottom of Confirmed
+**Transaction Success Actions**
+• Update product catalog
+• Refresh user balance  
+• Record purchase history
+• Show success notification
+• Emit analytics events (V2)
+end note
+
+note left of TransactionFailed
+**Error Recovery**
+• Parse error message
+• Suggest user actions
+• Log for debugging
+• Allow transaction retry
+• Check wallet balance
+end note
+
+@enduml

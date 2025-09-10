@@ -1,0 +1,225 @@
+@startuml UUPS-VendingMachine-V2_11-sequence-analytics
+!theme mars
+skinparam backgroundColor white
+skinparam note {
+  BackgroundColor #FFFACD
+  BorderColor #DAA520
+}
+title UUPS-VendingMachine V2 - Sequence Diagram\nAnalytics System V2
+
+actor "Admin" as Admin
+participant "Admin Dashboard\n(React)" as Dashboard
+participant "useContract Hook\n(Analytics)" as Hook
+participant "contract.js\n(Utils)" as Utils
+participant "ethers.js" as Ethers
+participant "UUPS Proxy" as Proxy
+participant "VendingMachineV2\n(Implementation)" as V2Impl
+database "Contract Storage\n(Analytics Data)" as Storage
+
+== Analytics Dashboard Load ==
+
+Admin -> Dashboard : Opens Admin tab
+activate Dashboard
+
+Dashboard -> Hook : loadAnalytics()
+activate Hook
+
+Hook -> Utils : Get analytics summary
+activate Utils
+
+Utils -> Ethers : contract.getAnalyticsSummary()
+activate Ethers
+
+Ethers -> Proxy : getAnalyticsSummary() call
+activate Proxy
+
+Proxy -> V2Impl : getAnalyticsSummary() via delegatecall
+activate V2Impl
+
+V2Impl -> Storage : Read analytics data:\n- salesHistory.length\n- totalEthCollected\n- productIds.length\n- address(this).balance
+activate Storage
+
+Storage --> V2Impl : Return aggregated data
+deactivate Storage
+
+V2Impl --> Proxy : Analytics summary tuple
+deactivate V2Impl
+
+Proxy --> Ethers : (totalSales, totalRevenue,\ntotalProducts, contractBalance)
+deactivate Proxy
+
+Ethers --> Utils : Formatted analytics data
+deactivate Ethers
+
+Utils --> Hook : Analytics object
+deactivate Utils
+
+Hook --> Dashboard : Real-time metrics
+deactivate Hook
+
+Dashboard -> Dashboard : Display analytics cards:\n- Total Sales: X\n- Total Revenue: Y ETH\n- Active Products: Z\n- Contract Balance: W ETH
+
+Dashboard --> Admin : Show analytics dashboard
+deactivate Dashboard
+
+== Sales History Query ==
+
+Admin -> Dashboard : Clicks "View Sales History"
+activate Dashboard
+
+Dashboard -> Hook : getSalesHistory()
+activate Hook
+
+Hook -> Utils : Load complete sales data
+activate Utils
+
+Utils -> Ethers : contract.getSalesHistoryPaginated(0, 50)
+activate Ethers
+
+Ethers -> Proxy : getSalesHistoryPaginated(0, 50)
+activate Proxy
+
+Proxy -> V2Impl : getSalesHistoryPaginated() via delegatecall
+activate V2Impl
+
+V2Impl -> Storage : Read salesHistory[0:50]:\n- productId, buyer, price\n- timestamp, blockNumber
+activate Storage
+
+Storage --> V2Impl : Array of SaleRecord structs
+deactivate Storage
+
+V2Impl --> Proxy : Paginated sales data
+deactivate V2Impl
+
+Proxy --> Ethers : Sales history array
+deactivate Proxy
+
+Ethers --> Utils : Raw sales data
+deactivate Ethers
+
+Utils -> Utils : Format for display:\n- Convert timestamps\n- Format ETH amounts\n- Truncate addresses
+
+Utils --> Hook : Formatted sales array
+deactivate Utils
+
+Hook --> Dashboard : Sales history data
+deactivate Hook
+
+Dashboard -> Dashboard : Render sales table:\n- Product ID | Buyer | Price\n- Timestamp | Block Number
+
+Dashboard --> Admin : Display sales history
+deactivate Dashboard
+
+== Revenue Analysis ==
+
+Admin -> Dashboard : Selects "Product Revenue"
+activate Dashboard
+
+Dashboard -> Hook : getProductRevenue(productId)
+activate Hook
+
+Hook -> Utils : Query specific product revenue
+activate Utils
+
+Utils -> Ethers : contract.getProductRevenue(productId)
+activate Ethers
+
+Ethers -> Proxy : getProductRevenue(productId)
+activate Proxy
+
+Proxy -> V2Impl : getProductRevenue() via delegatecall
+activate V2Impl
+
+V2Impl -> Storage : Read productTotalSales[productId]
+activate Storage
+
+Storage --> V2Impl : Total revenue for product
+deactivate Storage
+
+V2Impl --> Proxy : Product revenue amount
+deactivate V2Impl
+
+Proxy --> Ethers : Revenue in wei
+deactivate Proxy
+
+Ethers --> Utils : Revenue value
+deactivate Ethers
+
+Utils --> Hook : Formatted revenue (ETH)
+deactivate Utils
+
+Hook --> Dashboard : Product revenue data
+deactivate Hook
+
+Dashboard -> Dashboard : Update revenue chart:\n- Product performance comparison\n- Revenue distribution\n- Best/worst performers
+
+Dashboard --> Admin : Show revenue analysis
+deactivate Dashboard
+
+== Time-based Reports ==
+
+Admin -> Dashboard : Selects date range for report
+activate Dashboard
+
+Dashboard -> Hook : getSalesByTimeRange(startTime, endTime)
+activate Hook
+
+Hook -> Utils : Query sales in time period
+activate Utils
+
+Utils -> Ethers : contract.getSalesByTimeRange(start, end)
+activate Ethers
+
+Ethers -> Proxy : getSalesByTimeRange(start, end)
+activate Proxy
+
+Proxy -> V2Impl : getSalesByTimeRange() via delegatecall
+activate V2Impl
+
+V2Impl -> V2Impl : Filter salesHistory by timestamp:\nstartTime <= timestamp <= endTime
+
+V2Impl -> Storage : Read filtered sales records
+activate Storage
+
+Storage --> V2Impl : Matching sales in date range
+deactivate Storage
+
+V2Impl --> Proxy : Filtered sales array
+deactivate V2Impl
+
+Proxy --> Ethers : Time-filtered data
+deactivate Proxy
+
+Ethers --> Utils : Sales in date range
+deactivate Ethers
+
+Utils --> Hook : Processed report data
+deactivate Utils
+
+Hook --> Dashboard : Time-based analytics
+deactivate Hook
+
+Dashboard -> Dashboard : Generate report:\n- Sales volume by day\n- Revenue trends\n- Period comparisons
+
+Dashboard --> Admin : Display time-based report
+deactivate Dashboard
+
+note right of V2Impl
+**V2 Analytics Storage**
+New analytics data structure:
+• SaleRecord[] salesHistory
+• mapping productTotalSales  
+• uint256 totalEthCollected
+• Real-time aggregation
+end note
+
+note left of Dashboard
+**Real-time Dashboard**
+Live updates showing:
+• Current sales metrics
+• Revenue performance
+• Product analytics
+• Exportable reports
+end note
+
+@enduml

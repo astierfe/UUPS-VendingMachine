@@ -1,0 +1,115 @@
+@startuml VendingMachine_Components_A4
+!theme aws-orange
+skinparam backgroundColor rgba(255, 255, 255, 1)
+skinparam dpi 300
+skinparam maxMessageSize 150
+skinparam wrapWidth 200
+title VendingMachine V2 - Component Diagram\nInteractions Between Modules
+
+' Define key interfaces
+interface "IVendingMachine" as IVM
+interface "IWeb3Provider" as IW3
+interface "IUserInterface" as IUI
+
+' Top Row - Smart Contract Layer
+package "Smart Contract Layer" {
+  component "VendingMachineV2" as VM2 {
+    port "CRUD" as crud_port
+    port "Purchase" as purchase_port  
+    port "Analytics" as analytics_port
+  }
+  
+  component "UUPS Proxy" as Proxy {
+    port "Delegate" as delegate_port
+  }
+  
+  component "ProductLibrary" as PL
+  
+  package "OpenZeppelin" {
+    component "Ownable" as Ownable
+    component "UUPS" as UUPS
+  }
+}
+
+' Middle Row - Frontend Core
+package "Frontend Layer" {
+  component "App" as App {
+    port "Routes" as route_port
+    port "State" as state_port
+  }
+  
+  component "useContract Hook" as Hook {
+    port "Web3" as web3_port
+    port "Transactions" as tx_port
+  }
+  
+  component "Contract Utils" as Utils
+}
+
+' Bottom Left - UI Components  
+package "UI Components" {
+  component "Header" as Header
+  component "Catalog" as Catalog  
+  component "Admin Dashboard" as AdminDash
+  component "Product Card" as ProductCard
+}
+
+' Bottom Right - External Services
+package "External Services" {
+  component "ethers.js" as Ethers
+  component "MetaMask" as MetaMask
+  component "Alchemy" as Alchemy
+  component "Chakra UI" as ChakraUI
+}
+
+' Blockchain Infrastructure
+component "Ethereum Network" as Ethereum
+component "Event System" as Events
+
+' Interface implementations (simplified)
+VM2 -up-|> IVM
+Hook -up-|> IW3
+Header -up-|> IUI
+
+' Primary connections - Smart Contract Layer
+Proxy --> VM2 : "delegatecall"
+VM2 --> PL : "uses utils"
+VM2 --> Ownable : "inherits"
+VM2 --> UUPS : "inherits"
+
+' Primary connections - Frontend
+App --> Hook : "state mgmt"
+Hook --> Utils : "contract interface"
+Hook --> Ethers : "web3 calls"
+
+' UI connections
+App --> Header : "renders"
+App --> Catalog : "renders"
+App --> AdminDash : "renders"
+Catalog --> ProductCard : "contains"
+
+' External connections
+Ethers --> MetaMask : "provider"
+Ethers --> Alchemy : "RPC"
+Header --> ChakraUI : "styling"
+
+' Blockchain connections
+Hook --> Ethereum : "transactions"
+VM2 --> Events : "emits"
+Hook --> Events : "listens"
+
+' Key data flows (dotted for clarity)
+VM2 ..> Hook : "contract calls"
+Hook ..> App : "state updates"
+App ..> AdminDash : "admin data"
+
+' Compact annotations
+note top of VM2 : **V2 Features**\nAdmin CRUD\nAnalytics\nUpgrades
+
+note right of Hook : **Web3 Hub**\nState management\nTransaction handling\nEvent processing
+
+note bottom of Proxy : **UUPS Pattern**\nTransparent upgrades\nState preservation
+
+note left of AdminDash : **Admin Interface**\nProduct management\nAnalytics dashboard
+
+@enduml

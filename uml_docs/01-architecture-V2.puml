@@ -1,0 +1,161 @@
+@startuml VendingMachine_Architecture
+!theme aws-orange
+skinparam backgroundColor rgba(255, 255, 255, 1)
+title VendingMachine V2 - System Architecture\nUUPS Upgradeable DApp with Admin Interface
+
+' Define colors for different layers
+!define BLOCKCHAIN_COLOR #E8F4FD
+!define SMART_CONTRACT_COLOR #D4E6F1
+!define FRONTEND_COLOR #D5F4E6
+!define USER_COLOR #FADBD8
+!define EXTERNAL_COLOR #FDF2E9
+
+' User Layer
+package "Users" as users <<User Layer>> USER_COLOR {
+  actor "Customer" as customer
+  actor "Admin" as admin
+  actor "Contract Owner" as owner
+}
+
+' External Services
+package "External Services" as external <<External Layer>> EXTERNAL_COLOR {
+  component "MetaMask Wallet" as metamask
+  component "Alchemy RPC" as alchemy
+  component "IPFS/GitHub Pages" as hosting
+}
+
+' Frontend Layer
+package "React DApp Frontend" as frontend <<Frontend Layer>> FRONTEND_COLOR {
+  component "App.jsx" as app {
+    component "Header.jsx" as header
+    component "Catalog.jsx" as catalog
+    component "Admin.jsx" as adminUI
+    component "Analytics Dashboard" as analytics
+  }
+  
+  component "Web3 Integration" as web3 {
+    component "useContract.js Hook" as hook
+    component "contract.js Utils" as utils
+    component "ethers.js Library" as ethers
+  }
+  
+  component "UI Components" as ui {
+    component "ProductCard.jsx" as productcard
+    component "PurchaseHistory.jsx" as history
+    component "Admin Forms" as adminforms
+  }
+}
+
+' Blockchain Layer
+package "Ethereum Blockchain" as blockchain <<Blockchain Layer>> BLOCKCHAIN_COLOR {
+  
+  ' Smart Contract Layer
+  package "Smart Contracts" as contracts <<Smart Contract Layer>> SMART_CONTRACT_COLOR {
+    
+    ' UUPS Proxy Pattern
+    rectangle "UUPS Proxy Pattern" as proxy {
+      component "ERC1967Proxy" as proxycontract {
+        note right : Single address\nfor all versions
+      }
+      component "VendingMachineV1\n(Implementation)" as v1impl
+      component "VendingMachineV2\n(Implementation)" as v2impl
+    }
+    
+    ' Libraries
+    component "ProductLibrary.sol" as library {
+      note right : Utility functions\nfor product operations
+    }
+    
+    ' OpenZeppelin Dependencies
+    package "OpenZeppelin" as oz {
+      component "Initializable" as init
+      component "OwnableUpgradeable" as ownable
+      component "UUPSUpgradeable" as uups
+    }
+  }
+  
+  ' Blockchain Infrastructure
+  package "Network Layer" as network {
+    component "Sepolia Testnet" as sepolia
+    component "Local Hardhat" as hardhat
+    component "Mainnet Ready" as mainnet
+  }
+}
+
+' Data Storage
+package "Data & Analytics" as data {
+  storage "Contract Storage" as storage {
+    file "products mapping" as productsmap
+    file "productIds array" as idsarray
+    file "salesHistory array" as salesarray
+    file "analytics data" as analyticsdata
+  }
+  
+  storage "Local Storage" as localstorage {
+    file "Purchase History" as localhistory
+    file "User Preferences" as prefs
+  }
+}
+
+' Relationships - User Interactions
+customer --> metamask : "Connect wallet"
+admin --> metamask : "Admin access"
+owner --> metamask : "Owner functions"
+
+' Relationships - Frontend to External
+metamask --> frontend : "Web3 Provider"
+alchemy --> frontend : "RPC calls"
+hosting --> frontend : "Static hosting"
+
+' Relationships - Frontend Internal
+app --> header : "includes"
+app --> catalog : "includes"
+app --> adminUI : "includes"
+app --> analytics : "includes"
+
+web3 --> hook : "contains"
+web3 --> utils : "contains"
+web3 --> ethers : "uses"
+
+ui --> productcard : "contains"
+ui --> history : "contains"
+ui --> adminforms : "contains"
+
+' Relationships - Frontend to Blockchain
+hook --> proxycontract : "Contract calls\n(ethers.js)"
+utils --> proxycontract : "Contract interface"
+ethers --> alchemy : "RPC provider"
+
+' Relationships - Smart Contract Architecture
+proxycontract --> v2impl : "delegatecall\n(current)"
+proxycontract --> v1impl : "previous version"
+v2impl --> library : "uses"
+v1impl --> library : "uses"
+
+v2impl --> init : "inherits"
+v2impl --> ownable : "inherits"
+v2impl --> uups : "inherits"
+
+' Relationships - Network
+contracts --> sepolia : "deployed on"
+contracts --> hardhat : "local development"
+contracts --> mainnet : "production ready"
+
+' Relationships - Data Flow
+proxycontract --> storage : "reads/writes"
+frontend --> localstorage : "caches data"
+v2impl --> analyticsdata : "records sales"
+
+' Key Features Annotations
+note top of v2impl : **V2 New Features**\n• Admin CRUD operations\n• Sales analytics\n• Event logging\n• Permission system
+
+note top of proxycontract : **UUPS Pattern Benefits**\n• Same address for upgrades\n• Gas efficient\n• Owner-controlled upgrades\n• State preservation
+
+note right of adminUI : **Admin Interface**\n• Product management\n• Analytics dashboard\n• Sales history\n• Revenue reports
+
+note bottom of storage : **Persistent Data**\n• Products catalog\n• Sales transactions\n• Analytics metrics\n• User permissions
+
+' Deployment Flow
+note bottom of contracts : **Deployment Process**\n1. Deploy V1 with proxy\n2. Upgrade to V2\n3. Initialize V2 storage\n4. Preserve all V1 data
+
+@enduml

@@ -1,0 +1,184 @@
+@startuml UUPS-VendingMachine-V2_7-sequence-buy-product
+!theme mars
+
+title UUPS-VendingMachine V2 - Sequence Diagram\nProduct Purchase Flow
+
+actor "Customer" as Customer
+participant "React DApp\n(Frontend)" as Frontend
+participant "MetaMask\n(Wallet)" as MetaMask
+participant "useContract Hook\n(Web3 Layer)" as Hook
+participant "ethers.js\n(Library)" as Ethers
+participant "Alchemy RPC\n(Node Provider)" as Alchemy
+participant "UUPS Proxy\n(Contract)" as Proxy
+participant "VendingMachineV2\n(Implementation)" as V2Impl
+database "Contract Storage" as Storage
+participant "Ethereum Network" as Network
+
+note over Customer, Network : **Initial State: Customer browsing products**
+
+== Product Selection & Purchase Initiation ==
+
+Customer -> Frontend : Browse catalog and\nselect product (e.g., ID=1)
+activate Frontend
+
+Frontend -> Hook : Load product details\ngetProduct(1)
+activate Hook
+
+Hook -> Ethers : Contract call preparation
+activate Ethers
+
+Ethers -> Alchemy : RPC call: eth_call
+activate Alchemy
+
+Alchemy -> Proxy : getProduct(1) [static call]
+activate Proxy
+
+Proxy -> V2Impl : getProduct(1) via delegatecall
+activate V2Impl
+
+V2Impl -> Storage : Read products[1]
+activate Storage
+Storage --> V2Impl : Product data:\n{id: 1, name: "Coca Cola",\nprice: 0.01 ETH, stock: 10}
+deactivate Storage
+
+V2Impl --> Proxy : Return product struct
+deactivate V2Impl
+Proxy --> Alchemy : Product data
+deactivate Proxy
+Alchemy --> Ethers : Product details
+deactivate Alchemy
+Ethers --> Hook : Formatted product data
+deactivate Ethers
+Hook --> Frontend : Product available:\nPrice: 0.01 ETH, Stock: 10
+deactivate Hook
+
+Frontend -> Frontend : Display ProductCard with\n"Buy Now" button enabled
+
+Customer -> Frontend : Click "Buy Now" button\nfor product ID=1
+
+== Transaction Preparation ==
+
+Frontend -> Hook : Trigger purchase\nbuyProduct(1, 0.01 ETH)
+activate Hook
+
+Hook -> Hook : Validate parameters:\n- Product ID exists\n- Sufficient wallet balance\n- Gas estimation
+
+Hook -> Ethers : Prepare transaction:\ncontract.buyProduct(1, {value: parseEther("0.01")})
+activate Ethers
+
+Ethers -> MetaMask : Request transaction signature
+activate MetaMask
+
+MetaMask -> MetaMask : Display transaction popup:\n- To: Contract Address\n- Value: 0.01 ETH\n- Gas: Estimated\n- Data: buyProduct(1)
+
+alt Customer approves transaction
+  Customer -> MetaMask : Approve transaction
+  MetaMask -> MetaMask : Sign transaction with private key
+  
+  == Transaction Execution ==
+  
+  MetaMask -> Ethers : Return signed transaction
+  deactivate MetaMask
+  
+  Ethers -> Alchemy : Submit transaction:\neth_sendTransaction
+  activate Alchemy
+  
+  Alchemy -> Network : Broadcast to mempool
+  activate Network
+  
+  Network -> Network : Transaction mining...\n(block confirmation)
+  
+  Network -> Proxy : Execute buyProduct(1)\nwith 0.01 ETH value
+  activate Proxy
+  
+  Proxy -> V2Impl : buyProduct(1) via delegatecall\nwith msg.value = 0.01 ETH
+  activate V2Impl
+  
+  == V2 Enhanced Purchase Logic ==
+  
+  V2Impl -> Storage : Load product = products[1]
+  activate Storage
+  Storage --> V2Impl : Product data
+  deactivate Storage
+  
+  V2Impl -> V2Impl : Validate purchase:\n- require(product.id != 0)\n- require(product.stock > 0)\n- require(msg.value >= product.price)
+  
+  V2Impl -> Storage : Update product.stock -= 1
+  activate Storage
+  V2Impl -> Storage : products[1].stock = 9
+  deactivate Storage
+  
+  note right of V2Impl : **V2 Analytics Enhancement**
+  
+  V2Impl -> V2Impl : Create SaleRecord:\n{productId: 1, buyer: customer,\nprice: 0.01 ETH, timestamp: now}
+  
+  V2Impl -> Storage : Push to salesHistory array
+  activate Storage
+  V2Impl -> Storage : Update productTotalSales[1] += 0.01
+  V2Impl -> Storage : Update totalEthCollected += 0.01
+  deactivate Storage
+  
+  V2Impl -> V2Impl : Calculate refund:\nrefund = msg.value - product.price\nrefund = 0.01 - 0.01 = 0
+  
+  alt No overpayment (refund = 0)
+    note right of V2Impl : Customer paid exact amount
+  else Overpayment detected
+    V2Impl -> Customer : Transfer refund\npayable(msg.sender).transfer(refund)
+    V2Impl -> V2Impl : Emit RefundSent(buyer, refund)
+  end
+  
+  == Event Emission (V2 Enhanced) ==
+  
+  V2Impl -> V2Impl : Emit SaleRecorded(\nsaleId, productId: 1,\nbuyer, price, timestamp)
+  
+  V2Impl -> V2Impl : Emit ProductPurchased(\nproductId: 1, buyer, price)
+  
+  V2Impl --> Proxy : Transaction successful
+  deactivate V2Impl
+  
+  Proxy --> Network : Return transaction receipt
+  deactivate Proxy
+  
+  Network -> Network : Include in block\nand confirm transaction
+  
+  Network --> Alchemy : Transaction mined:\n✅ Success, Gas used, Block number
+  deactivate Network
+  
+  == Frontend Update & User Feedback ==
+  
+  Alchemy --> Ethers : Transaction receipt
+  deactivate Alchemy
+  
+  Ethers --> Hook : Purchase successful
+  deactivate Ethers
+  
+  Hook -> Hook : Update local state:\n- Add to purchaseHistory\n- Refresh product catalog
+  
+  Hook --> Frontend : Purchase completed:\n✅ Product purchased\n✅ Stock updated\n✅ Analytics recorded
+  deactivate Hook
+  
+  Frontend -> Frontend : Show success notification:\n"Purchase successful!\nCoca Cola bought for 0.01 ETH"
+  
+  Frontend -> Frontend : Update UI:\n- Refresh product stock (9 remaining)\n- Add to purchase history\n- Update wallet balance
+  
+  Frontend --> Customer : Success feedback with\ntransaction hash and details
+
+else Customer rejects transaction
+  Customer -> MetaMask : Reject transaction
+  MetaMask --> Ethers : User denied transaction
+  Ethers --> Hook : Transaction cancelled
+  Hook --> Frontend : Purchase cancelled
+  Frontend --> Customer : Transaction cancelled by user
+end
+
+note over Customer, Network
+**Purchase Success Criteria:**
+• ETH payment processed correctly
+• Product stock decremented
+• V2 analytics data recorded
+• Events emitted for indexation
+• Frontend updated in real-time
+• User receives clear feedback
+end note
+
+@enduml

@@ -1,0 +1,120 @@
+@startuml VendingMachine_Deployment_A4
+!theme aws-orange
+skinparam backgroundColor rgba(255, 255, 255, 1)
+skinparam dpi 300
+skinparam maxMessageSize 150
+skinparam wrapWidth 200
+title VendingMachine V2 - Deployment Diagram\nInfrastructure and Environments
+
+' Left Column - Development & Testing
+package "Development & Testing" {
+  node "Dev Machine" as DevMachine {
+    component "Hardhat" as Hardhat
+    artifact "Source Code" as SourceCode
+    database "Local State" as LocalState
+  }
+  
+  node "Sepolia Testnet" as Sepolia {
+    component "Test Contracts" as TestContracts {
+      artifact "V2 Proxy" as TestProxy
+      artifact "V2 Impl" as TestImpl
+    }
+    database "Testnet State" as TestnetState
+  }
+  
+  node "Alchemy Test" as AlchemyTest {
+    component "Test RPC" as TestRPC
+    database "Test Cache" as TestCache
+  }
+}
+
+' Center Column - Production Infrastructure  
+package "Production Infrastructure" {
+  node "GitHub Pages" as GitHubPages {
+    component "Static Host" as StaticHost {
+      artifact "React Build" as ReactBuild
+      file "addresses.json" as AddressesFile
+    }
+    component "CDN" as CDN
+  }
+  
+  node "Ethereum Mainnet" as Mainnet {
+    component "Prod Contracts" as ProdContracts {
+      artifact "V2 Proxy" as ProdProxy  
+      artifact "V2 Impl" as ProdImpl
+    }
+    database "Mainnet State" as MainnetState
+  }
+  
+  node "Alchemy Prod" as AlchemyProd {
+    component "Prod RPC" as ProdRPC
+    component "Load Balancer" as LoadBalancer
+  }
+}
+
+' Right Column - User Access & External Services
+package "User Access & Services" {
+  node "User Browser" as Browser {
+    component "MetaMask" as MetaMask {
+      database "Wallet State" as WalletState
+    }
+    component "DApp UI" as DAppUI
+  }
+  
+  node "Mobile" as Mobile <<device>> {
+    component "MetaMask Mobile" as MetaMaskMobile
+    component "Mobile Browser" as MobileBrowser
+  }
+  
+  cloud "External Services" as ExternalServices {
+    component "GitHub Actions" as GitHubActions
+    component "Alchemy APIs" as AlchemyAPIs
+    component "NPM Registry" as NPMRegistry
+  }
+}
+
+' Development Flow
+DevMachine --> Sepolia : "deploy test"
+Hardhat --> LocalState : "local dev"
+SourceCode --> GitHubActions : "CI/CD trigger"
+
+' Testing Infrastructure
+TestContracts --> TestnetState : "stored in"
+AlchemyTest --> Sepolia : "RPC access"
+TestProxy --> TestImpl : "delegates"
+
+' Production Flow
+GitHubActions --> ReactBuild : "builds"
+ReactBuild --> StaticHost : "deployed"
+StaticHost --> CDN : "distributed"
+ProdContracts --> MainnetState : "stored in"
+AlchemyProd --> Mainnet : "RPC access"
+ProdProxy --> ProdImpl : "delegates"
+
+' User Interactions
+Browser --> GitHubPages : "HTTPS"
+MetaMask --> AlchemyProd : "mainnet RPC"
+MetaMask --> AlchemyTest : "test RPC"
+DAppUI --> ProdContracts : "contract calls"
+Mobile --> GitHubPages : "mobile access"
+MetaMaskMobile --> AlchemyProd : "mobile RPC"
+
+' External Dependencies
+ExternalServices --> AlchemyProd : "enhanced APIs"
+ExternalServices --> GitHubPages : "deployment"
+DevMachine --> NPMRegistry : "packages"
+
+' Compact Notes
+note top of DevMachine : **Development**\nLocal blockchain\nRapid testing\nGas optimization
+
+note top of Sepolia : **Testing**\nPublic testnet\nUser validation\nIntegration tests
+
+note top of GitHubPages : **Production**\nStatic hosting\nGlobal CDN\nAuto-deployment
+
+note right of Browser : **User Access**\nWeb3 wallet\nCross-platform\nReal-time sync
+
+note bottom of TestProxy : **UUPS Pattern**\nUpgradeable\nState preserved\nGas efficient
+
+note bottom of GitHubActions : **CI/CD Pipeline**\n1. Push code\n2. Build React\n3. Deploy Pages\n4. Live update
+
+@enduml

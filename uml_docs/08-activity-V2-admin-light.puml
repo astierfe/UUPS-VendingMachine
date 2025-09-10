@@ -1,0 +1,77 @@
+@startuml UUPS-VendingMachine-V2_8-activity-admin
+!theme mars
+
+title UUPS-VendingMachine V2 - Activity Diagram\nAdmin Management Workflows (Light Version)
+
+start
+:Admin connects wallet;
+if (isAdmin() verified?) then (yes)
+  :Show Admin Dashboard;
+else (no)
+  :Show user interface only;
+  stop
+endif
+
+:Admin selects action;
+switch (Action Type?)
+case (Product Management)
+  :Choose CRUD operation;
+  switch (Operation?)
+  case (Add)
+    :Fill product form;
+    :Validate inputs;
+    :Call addProduct();
+    :Update catalog;
+  case (Update) 
+    :Select existing product;
+    :Modify fields;
+    :Call updateProduct();
+    :Refresh display;
+  case (Delete)
+    :Confirm deletion;
+    :Call removeProduct();
+    :Remove from list;
+  endswitch
+
+case (Analytics)
+  :Load analytics data;
+  :Display metrics:
+  • Total sales
+  • Revenue
+  • Product performance;
+  :Show sales history table;
+  
+case (System Admin)
+  :Choose system action;
+  switch (System Action?)
+  case (Withdraw)
+    :Show balance;
+    :Confirm withdrawal;
+    :Transfer ETH to owner;
+  case (Contract Info)
+    :Display contract details;
+  endswitch
+endswitch
+
+if (Transaction successful?) then (yes)
+  :Show success feedback;
+  :Update UI state;
+else (no)
+  :Display error message;
+  :Allow retry;
+endif
+
+:Return to dashboard;
+stop
+
+note right
+**V2 Admin Capabilities**
+• Product CRUD operations
+• Real-time analytics
+• Revenue management
+• Secure access control
+end note
+
+@enduml
+
+@enduml

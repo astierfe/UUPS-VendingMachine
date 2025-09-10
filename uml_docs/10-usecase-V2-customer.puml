@@ -1,0 +1,128 @@
+@startuml UUPS-VendingMachine-V2_10a-usecase-customer
+!theme mars
+skinparam backgroundColor white
+skinparam note {
+  BackgroundColor #FFFACD
+  BorderColor #DAA520
+}
+
+title UUPS-VendingMachine V2 - Use Case Diagram\nCustomer Shopping Experience
+
+' Primary Actor
+actor "Customer" as Customer
+
+' System boundary
+rectangle "VendingMachine V2 DApp" {
+  
+  ' Core Customer Use Cases
+  usecase "Connect Wallet" as UC1
+  usecase "Browse Product Catalog" as UC2
+  usecase "View Product Details" as UC3
+  usecase "Purchase Product" as UC4
+  usecase "View Purchase History" as UC5
+  usecase "Receive Automatic Refund" as UC6
+  
+  ' Supporting System Use Cases
+  usecase "Validate Payment" as UC7
+  usecase "Update Product Stock" as UC8
+  usecase "Calculate Refund Amount" as UC9
+  usecase "Record Purchase Transaction" as UC10
+}
+
+' External Systems
+rectangle "External Integrations" {
+  usecase "Authenticate with MetaMask" as EXT1
+  usecase "Process Blockchain Transaction" as EXT2
+  usecase "Connect to Ethereum Network" as EXT3
+}
+
+' Primary Customer Interactions
+Customer --> UC1 : connects MetaMask wallet
+Customer --> UC2 : browses available products
+Customer --> UC3 : checks price and stock
+Customer --> UC4 : makes ETH payment
+Customer --> UC5 : reviews personal purchases
+Customer <-- UC6 : receives overpayment refund
+
+' Include Relationships (mandatory steps)
+UC1 ..> EXT1 : <<include>>
+UC4 ..> UC7 : <<include>>
+UC4 ..> UC8 : <<include>>
+UC4 ..> UC10 : <<include>>
+UC4 ..> EXT2 : <<include>>
+
+' Extend Relationships (optional/conditional)
+UC6 ..> UC4 : <<extend>>\n[overpayment detected]
+UC9 ..> UC6 : <<include>>
+
+' System Integration Dependencies
+UC7 ..> EXT3 : <<include>>
+UC8 ..> EXT2 : <<include>>
+UC10 ..> EXT2 : <<include>>
+
+' Precondition Relationships
+UC2 ..> UC1 : <<precedes>>
+UC3 ..> UC2 : <<precedes>>
+UC4 ..> UC3 : <<precedes>>
+
+note top of Customer
+**Customer Role**
+Regular users who want to:
+• Purchase products with ETH
+• Browse available catalog
+• Track their purchase history
+• Receive automatic refunds
+end note
+
+note right of UC4
+**Core Purchase Flow**
+1. Select product from catalog
+2. Confirm price and availability  
+3. Sign MetaMask transaction
+4. Automatic stock update
+5. Overpayment refund if needed
+6. Purchase recorded in history
+end note
+
+note bottom of UC6
+**V2 Enhanced Refund**
+Automatic refund calculation:
+• Detects overpayment
+• Calculates exact refund
+• Instant ETH return
+• Transaction logged
+end note
+
+note left of EXT2
+**Blockchain Integration**
+• Smart contract interaction
+• ETH payment processing
+• Transaction confirmation
+• Event emission
+• Gas fee handling
+end note
+
+note bottom of UC5
+**Purchase History**
+Local storage tracking:
+• Product name and price
+• Transaction timestamp
+• Purchase confirmation
+• Session-based memory
+end note
+
+' Workflow sequence annotation
+note as WorkflowNote
+**Typical Customer Workflow**
+1. Connect MetaMask → Browse Catalog
+2. View Product Details → Purchase Product  
+3. Blockchain Processing → Stock Update
+4. Transaction Confirmation → History Update
+5. Optional: Automatic Refund Processing
+end note
+
+WorkflowNote .. UC1
+
+@enduml
+
+@enduml
