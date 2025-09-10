@@ -91,13 +91,13 @@ This project includes comprehensive UML diagrams documenting the complete archit
 - [**Component Diagram**](./uml_docs/UUPS-VendingMachine-V2_2-Components_A4.svg) - Detailed component relationships and dependencies
 - [**Deployment Diagram**](./uml_docs/UUPS-VendingMachine-V2_3-Deployment_A4.svg) - Infrastructure setup and deployment environments
 - [**Class Diagram**](./uml_docs/UUPS-VendingMachine-V2_4-Classes.svg) - Smart contract structure and inheritance patterns
-- [**Package Diagram**](./uml_docs/UUPS-VendingMachine-V2_5-packages.svg) - Code organization and module structure
+- [**Package Diagram**](./uml_docs/UUPS-VendingMachine-V2_5-packages-light.svg) - Code organization and module structure
 
 ### Behavioral Diagrams
 
 - [**Upgrade Sequence V1→V2**](./uml_docs/UUPS-VendingMachine-V2_6-sequence-upgrade.svg) - UUPS upgrade process flow
 - [**Purchase Sequence**](./uml_docs/UUPS-VendingMachine-V2_7-sequence-buy-product.svg) - Complete product purchase workflow
-- [**Admin Activity**](./uml_docs/UUPS-VendingMachine-V2_8-activity-admin.svg) - Admin management workflows
+- [**Admin Activity**](./uml_docs/UUPS-VendingMachine-V2_8-activity-admin-light.svg) - Admin management workflows
 - [**MetaMask State Machine**](./uml_docs/UUPS-VendingMachine-V2_9-state-metamask.svg) - Transaction state transitions
 - [**Analytics Sequence**](./uml_docs/UUPS-VendingMachine-V2_11-sequence-analytics.svg) - V2 analytics and reporting system
 
