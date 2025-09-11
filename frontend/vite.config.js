@@ -3,7 +3,6 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/UUPS-VendingMachine/', // 👈 AJOUT pour GitHub Pages
   define: {
     global: 'globalThis',
   },
@@ -14,3 +13,4 @@ export default defineConfig({
     outDir: 'dist' // 👈 AJOUT pour clarifier le dossier de sortie
   }
 })
+
