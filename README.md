@@ -107,13 +107,6 @@ This project includes comprehensive UML diagrams documenting the complete archit
 - [**Admin Use Cases**](./uml_docs/UUPS-VendingMachine-V2_10b-usecase-admin.svg) - Administrative management interface
 - [**Owner Use Cases**](./uml_docs/UUPS-VendingMachine-V2_10c-usecase-owner.svg) - System-level administration
 
-### Diagram Features
-
-- **Professional Quality**: All diagrams follow UML 2.0 standards and best practices
-- **A4 Optimized**: Designed for perfect printing on A4 paper (portrait/landscape)
-- **SVG Format**: Vector graphics for infinite zoom without quality loss
-- **Comprehensive Coverage**: Complete system documentation from architecture to user interactions
-- **V2 Enhanced**: Highlights new features including admin interface, analytics, and UUPS upgrade patterns
 
 ## Architecture
 
@@ -259,6 +252,9 @@ The modular UUPS architecture opens doors to countless innovations:
 - **Mobile Apps**: Native iOS/Android apps with Web3 integration
 
 ## Smart Contract Details
+
+### Smart Contracts API
+- [**Smart Contracts API**](docs/index.md)
 
 ### Contract Addresses
 
