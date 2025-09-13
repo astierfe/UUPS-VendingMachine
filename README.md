@@ -147,8 +147,8 @@ frontend/src/
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/uups-vending-machine-v2.git
-cd uups-vending-machine-v2
+git clone https://github.com/astierfe/UUPS-VendingMachine.git
+cd UUPS-VendingMachine
 
 # Install dependencies
 npm install
@@ -166,7 +166,7 @@ npx hardhat node
 
 # Deploy V1 (in another terminal)
 npx hardhat run scripts/deploy.js --network localhost
-npx hardhat run scripts/populate-product.js --network localhost
+npx hardhat run scripts/populate-products.js --network localhost
 
 # Upgrade to V2
 npx hardhat run scripts/deploy-v2.js --network localhost
