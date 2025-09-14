@@ -150,6 +150,10 @@ frontend/src/
 git clone https://github.com/astierfe/UUPS-VendingMachine.git
 cd UUPS-VendingMachine
 
+# Prepare environment variables file (needed even in local deployement)
+cp .env.example .env
+# No need to edit .env for local deployement
+
 # Install dependencies
 npm install
 
